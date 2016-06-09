@@ -1,0 +1,1957 @@
+\documentclass[USenglish,oneside,twocolumn]{article}
+\usepackage[big]{dgruyter_NEW}
+
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{algorithmic}
+
+\usepackage{enumitem}\setlist{nosep}
+
+\usepackage{float}
+
+\usepackage{hyperref}
+\hypersetup{colorlinks=true,
+            linkcolor=black,
+            citecolor=blue,
+            pdftitle={Circuit-extension handshakes for Tor achieving forward secrecy in a quantum world},
+            pdfauthor={}}
+
+
+% Counters and lists
+
+\usepackage{chngcntr}
+\counterwithin{figure}{section}
+\counterwithin{table}{section}
+
+\theoremstyle{dgthm}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma} 
+
+\theoremstyle{dgdef}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{remark}[theorem]{Remark} 
+
+\newcounter{GameSet}
+\newcounter{GameNum}[GameSet]
+
+\renewcommand{\labelitemi}{$\bullet$}
+
+
+% Macros
+
+\newcommand{\Protocol}[1]{\operatorname{\mathsf{#1}}}
+
+\newcommand{\ntor}{{\sf {ntor}}}
+\newcommand{\hybrid}{{\sf {hybrid}}}
+\newcommand{\ntrutor}{{\sf {qstor}}}
+\newcommand{\qstor}{{\sf {qstor}}}
+\newcommand{\djbcurve}{{\sf {curve25519}}}
+\newcommand{\ntrue}{{\sf{NTRUEncrypt}}}
+\newcommand{\qse}{{\sf {QSE}}}
+
+\newcommand{\bfu}{{\boldsymbol u}}
+\newcommand{\bfv}{{\boldsymbol v}}
+
+\newcommand{\con}{||}
+\newcommand{\abs}[1]{\left\vert#1\right\vert}
+\newcommand{\samples}{\xleftarrow{\$}}
+
+\newcommand{\TODO}[1]{{\bf#1}}
+
+
+% Algorithms
+\newcommand{\AlgorithmName}[1]{\operatorname{\mathsf{#1}}}
+
+\newcommand{\Hash}{\AlgorithmName{H}}
+\newcommand{\KeyGen}{\AlgorithmName{KeyGen}}
+\newcommand{\Encaps}{\AlgorithmName{Encaps}}
+\newcommand{\Decaps}{\AlgorithmName{Decaps}}
+\newcommand{\dhgen}{\AlgorithmName{DHGen}}
+
+\newcommand{\KDF}{\AlgorithmName{Kdf}}
+\newcommand{\PRF}{\AlgorithmName{Prf}}
+\newcommand{\XTR}{\AlgorithmName{Xtr}}
+\newcommand{\HMAC}{\AlgorithmName{HMAC}}
+\newcommand{\HMACS}{\AlgorithmName{HMAC-SHA256}}
+\newcommand{\HKDF}{\AlgorithmName{HKDF}}
+\newcommand{\HKDFS}{\AlgorithmName{HKDF-SHA256}}
+
+\newcommand{\STE}{\AlgorithmName{StE}}
+
+\newcommand{\PEnc}[1]{\AlgorithmName{StE.Enc}}
+\newcommand{\PDec}[1]{\AlgorithmName{StE.Dec}}
+
+% Sessions
+\newcommand{\p}[2]{\pi_{#1}^{#2}}
+
+% Oracles
+\newcommand{\Oracle}[1]{\mathcal #1}
+
+% Tokens
+\newcommand{\Token}[1]{\textnormal{\tt{#1}}}
+
+\newcommand{\init}{\Token{init}}
+\newcommand{\resp}{\Token{resp}}
+\newcommand{\inprog}{\Token{in-progress}}
+\newcommand{\reject}{\Token{reject}}
+\newcommand{\accept}{\Token{accept}}
+\newcommand{\phase}{\Token{phase}}
+
+% Adversary Interaction
+\newcommand{\AdvInt}[1]{\mathsf{#1}}
+
+\newcommand{\Corrupt}{\AdvInt{Corrupt}}
+\newcommand{\Reveal}{\AdvInt{Reveal}}
+\newcommand{\Send}{\AdvInt{Send}}
+\newcommand{\Test}{\AdvInt{Test}}
+\newcommand{\Encrypt}{\AdvInt{Encrypt}}
+\newcommand{\Decrypt}{\AdvInt{Decrypt}}
+
+\newcommand{\Enc}{\AdvInt{Enc}}
+\newcommand{\Dec}{\AdvInt{Dec}}
+
+% Games
+\newcommand{\Game}{\refstepcounter{GameNum}\paragraph*{Game \theGameNum.~}}
+\newcommand{\LGame}[1]{\refstepcounter{GameNum}\label{#1}\paragraph*{Game \theGameNum.~}}
+
+% Events
+\newcommand{\brk}[1]{\mathsf{break}_{#1}^{(\theGameSet)}}
+
+% Probabilities
+\newcommand{\Prb}[1]{\mathrm{Pr}\left(\brk{#1}\right)}
+\newcommand{\CPrb}[1]{\mathrm{Pr}\left(#1\right)}
+\newcommand{\Unif}[1]{\operatorname{\mathscr{U}}(#1)}
+
+
+% Advantage measures
+\newcommand{\Experiment}[1]{\operatorname{\tt{#1}}}
+\newcommand{\Algorithm}[1]{\mathcal #1}
+\newcommand{\AdvName}[2]{\operatorname{\mathrm{Adv}_{\Protocol{#1}}^{\Experiment{#2}}}}
+\newcommand{\Adv}[3]{\AdvName{#1}{#2}(\Algorithm{#3})}
+
+
+\newcommand{\AcceSa}[2]{\Adv{#1}{sacce-sa}{#2}}
+\newcommand{\AcceAe}[2]{\Adv{#1}{sacce-ae}{#2}}
+
+\newcommand{\SAcceSaNtor}[1]{\Adv{hybrid}{s-sacce-sa}{#1}}
+\newcommand{\SAcceSaHybrid}[1]{\Adv{hybrid}{s-sacce-sa}{#1}}
+\newcommand{\SAcceSaHybridK}[1]{\Adv{hybrid(\overrightarrow{\mathbb{E}})}{s-sacce-sa}{#1}}
+
+\newcommand{\SAcceAeNtor}[1]{\Adv{hybrid(\emptyset)}{s-sacce-ae}{#1}}
+\newcommand{\SAcceAeHybridK}[1]{\Adv{hybrid(\overrightarrow{\mathbb{E}})}{s-sacce-ae}{#1}}
+
+
+\newcommand{\IndCpa}[2]{\Adv{#1}{ind-cpa}{#2}}
+
+\newcommand{\AdvPrf}[2]{\Adv{#1}{prf}{#2}}
+\newcommand{\AdvDdh}[1]{\Adv{\mathbf{G}}{ddh}{#1}}
+\newcommand{\AdvOdh}[1]{\Adv{\mathbf{G}, \Hash}{odh}{#1}}
+
+\newcommand{\AdvSlhae}[1]{\Adv{StE}{sLHAE}{#1}}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+
+  \author*[1]{John M. Schanck}
+  \author[2]{William Whyte}
+  \author[3]{Zhenfei Zhang}
+
+  \affil[1]{University of Waterloo and Security Innovation, email: jschanck@securityinnovation.com}
+  \affil[2]{Security Innovation, email: wwhyte@securityinnovation.com}
+  \affil[3]{Security Innovation, email: zzhang@securityinnovation.com}
+
+  \journalname{Proceedings on Privacy Enhancing Technologies}
+  \DOI{10.1515/popets-2016-0037}
+  \received{2016-02-29}
+  \revised{2016-06-02}
+  \accepted{2016-06-02}
+
+  \journalyear{}
+  \journalvolume{2016}
+  \journalissue{4}
+
+
+\title{Circuit-extension handshakes for Tor achieving forward secrecy in a quantum world}
+
+\begin{abstract}
+  {We propose a circuit extension handshake for Tor that is forward secure
+  against adversaries who gain quantum computing capabilities after session
+  negotiation. In doing so, we refine the notion of an authenticated and
+  confidential channel establishment (ACCE) protocol and define pre-quantum,
+  transitional, and post-quantum ACCE security. These new definitions reflect
+  the types of adversaries that a protocol might be designed to resist. We
+  prove that, with some small modifications, the currently deployed Tor circuit
+  extension handshake, \ntor, provides pre-quantum ACCE
+  security. We then prove that our new protocol, when instantiated with a
+  post-quantum key encapsulation mechanism, achieves the stronger notion of
+  transitional ACCE security.  Finally, we instantiate our protocol with
+  \ntrue~and provide a performance comparison between \ntor, our proposal,
+  and the recent design of Ghosh and Kate.}
+\end{abstract}
+
+\maketitle
+
+\section{Introduction}
+  A key exchange protocol allows two parties who share no common secrets to
+  agree on a common key over a public channel. In addition to achieving this
+  basic goal, key exchange protocols may satisfy various secondary properties
+  that are deemed important to security in a particular setting. Modern key
+  exchange protocols typically provide one or more of the following features.
+
+  \begin{enumerate}
+    \item {\bf Authentication:~} If one or both parties can be assured of their
+      peer's identity, the key exchange is \emph{authenticated}. The
+      authentication is \emph{one-way} in the first case and \emph{mutual} in
+      the latter.
+      %Protocols such as \cite{CanettiK01, LauterM06, LaMacchiaLM07}
+      %provide mutual authentication if each peer obtains a certified copy of
+      %the other's public key.
+
+    \item {\bf Anonymity:} Some one-way authenticated key exchange protocols,
+      such as \ntor~\cite{GoldbergSU13}, guarantee that the unauthenticated peer does not
+      reveal their identity just by participating in the protocol. Such protocols
+      are deemed \emph{one-way anonymous}.
+
+    \item {\bf Forward Secrecy:~} A protocol provides forward secrecy if the
+      compromise of a party's long-term key material does not affect the
+      secrecy of session keys negotiated prior to the compromise. Forward secrecy is
+      typically achieved by mixing long-term key material with ephemeral keys
+      that are discarded as soon as the session has been established.
+  \end{enumerate}
+
+  \noindent Forward secret protocols are a particularly effective tool for resisting mass
+  surveillance as they resist a broad class of \emph{harvest-then-decrypt}
+  attacks. In a harvest-then-decrypt attack a passive adversary records
+  ciphertexts in the present with the hope of acquiring new decryption
+  capabilities in the future.  Without forward secrecy any number of
+  non-cryptanalytic attacks may lead to a loss of confidentiality. For example,
+  a server's long-term key may be compromised by a hacker or subpoenaed by a
+  court. With forward secrecy, the only way that a passive adversary can learn
+  a session key that was negotiated pre-compromise is through cryptanalysis.
+  For some applications, this makes forward secrecy an essential requirement.
+
+  Unfortunately, all of the key exchange protocols in widespread deployment are
+  vulnerable to quantum cryptanalysis. A reasonable case could therefore be
+  made that the use of \emph{post-quantum} primitives is a pre-requisite for forward
+  secrecy.
+
+  \begin{enumerate}
+    \item[4.] {\bf Post-quantum security:~} A cryptographic primitive or protocol
+      is deemed \emph{post-quantum} if it is secure against adversaries that
+      can perform polynomial time quantum computations.
+  \end{enumerate}
+
+  \noindent Primitives based on the hardness of discrete logarithms (Diffie-Hellman,
+  ECDH, DSA, ECDSA) and integer factorization (RSA) can be broken in quantum
+  polynomial time using Fourier sampling techniques \cite{Shor94,Boneh1995}.
+  There are, however, a number of primitives that are believed to resist
+  quantum adversaries, and these could be used to construct post-quantum,
+  forward secure, authenticated key exchange.
+
+  Recent announcements by NSA \cite{NSA} and NIST \cite{Chen2016} have made it
+  clear that government users are seriously considering migrating to
+  post-quantum cryptography in the near future. The exact migration path
+  remains unclear, but several factors may slow the transition to post-quantum
+  algorithms, e.g.
+  \begin{enumerate}
+    \item low confidence in the security of new primitives,
+    \item low confidence in the reliability of new implementations,
+    \item the need for compliance with existing standards, and
+    \item difficulty integrating new primitives into existing protocols and
+      public key infrastructures.
+  \end{enumerate}
+  The first three issues may be addressed by ``hybridizing'' well-established
+  and post-quantum systems. For example, recent work on integrating Ring-LWE
+  into TLS considered a ciphersuite that performs a Ring-LWE key exchange in
+  parallel with an ECDH key exchange~\cite{Bos2015}.  If an attack is found on
+  the Ring-LWE parameter set, or its implementation, the proposed ciphersuite
+  maintains all of the security that would have been provided by ECDH on its
+  own.
+
+  The fourth issue may be addressed, partially, by upgrading to post-quantum
+  primitives only where it is absolutely necessary. The TLS ciphersuites of
+  \cite{Bos2015}, as well as the Tor circuit extension handshakes of
+  \cite{GhoshK15} and the present work, forego post-quantum authentication
+  mechanisms because they deem such mechanisms to be unnecessary in the short
+  term.  These protocols cannot defend against adversaries with quantum
+  capabilities at the time of session negotiation. They are, however, secure
+  against adversaries who gain quantum computing capabilities sometime after
+  session negotiation. This is a useful class of adversaries to defend against,
+  and we believe that this class accurately represents adversaries in the real
+  world today.
+
+  We will say that a protocol provides \emph{transitional security} if it
+  provides pre-quantum authentication and post-quantum confidentiality. Such
+  protocols are safe to use in the current transitional period between the
+  pre- and post-quantum settings.
+
+  Pre-quantum, transitional, and post-quantum security must be defined with
+  respect to a specific security experiment in order to be meaningful. The
+  exact sense in which we will use these terms is provided by Definitions
+  \ref{def:prequantum}, \ref{def:transitional}, and \ref{def:postquantum}.
+
+\subsection{Our contribution}
+  The \ntor~protocol \cite{GoldbergSU13} is a forward secret, one-way
+  authenticated key exchange protocol that has been deployed in Tor since
+  version $0.2.4.8\text{-alpha}$ \cite{TorPropNtor}. It relies on ephemeral
+  ECDH keys for forward secrecy and, consequently, is vulnerable to
+  harvest-and-decrypt attacks involving quantum adversaries.
+
+  We show how to incorporate a secondary key encapsulation mechanism (KEM) into
+  the \ntor~protocol to strengthen its resistance to harvest-and-decrypt
+  attacks. We describe a modular protocol, \hybrid, in Section \ref{sec:hybrid}
+  that allows for the incorporation of zero or more KEMs.
+
+  Inspired by recent work on the provable security of TLS and SSH ciphersuites
+  as-standardized \cite{Jager2012,Krawczyk2013,Bergsma2014}, we give proofs in
+  the authenticated and confidential channel establishment (ACCE) model. The
+  ACCE model was introduced in \cite{Jager2012}; we review the ACCE model in
+  Section \ref{sec:acce} before refining it with notions of pre-quantum,
+  transitional, and post-quantum ACCE security (Definitions
+  \ref{def:prequantum}, \ref{def:transitional}, and \ref{def:postquantum}).
+  These ACCE variants reflect the types of adversaries that a protocol is
+  designed to resist. A pre-quantum ACCE protocol provides pre-quantum
+  authentication and pre-quantum confidentiality. A transitional ACCE protocol
+  provides pre-quantum authentication and post-quantum confidentiality.  A
+  post-quantum ACCE protocol provides post-quantum authentication and
+  post-quantum confidentiality.
+
+  We prove that \hybrid, with zero additional KEMs, is a pre-quantum ACCE
+  protocol. With zero KEMs \hybrid~is essentially the same as \ntor. We
+  describe the differences in Section \ref{sec:ntor}; the modifications allow
+  us to prove the security of \hybrid~under slightly weaker assumptions than
+  were employed in the proof of security for \ntor~in \cite{GoldbergSU13}.
+
+  We then prove that \hybrid~with one post-quantum KEM is a transitional ACCE
+  protocol. More specifically, we show that an adversary's advantage in
+  violating the channel security of \hybrid~is a function of its minimal
+  advantage against either the Diffie-Hellman primitive or the secondary KEM.
+
+  Finally, we provide a concrete instantiation of our protocol with a single
+  additional \ntrue-based KEM. Based on the conjectured post-quantum security
+  of \ntrue~we claim that this instantiation is transitionally secure. We
+  provide an implementation and performance figures for this instantiation, and
+  compare it with recent work \cite{GhoshK15} based on Ring-LWE.
+
+  We summarize the performance comparison between the legacy Tor handshake
+  ({\sf tap}), the current Tor handshake (\ntor), our protocol (\hybrid), and
+  the proposal of Ghosh-Kate in Table \ref{tab:comp}. We discuss the
+  performance results in Section \ref{sec:perf}.
+
+  We make this proposal for two reasons. First, we believe it to be an
+  interesting case study into the practicality of post-quantum cryptography and
+  into the difficulties one might encounter when transitioning to post-quantum
+  primitives within real-world protocols and code-bases. Second, we believe that
+  Tor is a strong candidate for an early transition to post-quantum primitives.
+  Users of Tor may be justifiably concerned about adversaries who record traffic
+  in the present and store it for decryption when technology or cryptanalytic
+  techniques improve.
+
+		\begin{table*}\centering
+	\begin{tabular}{r|r|r|r|r|r}
+    &&\quad{\sf tap} &\quad~\ntor	    &~\hybrid & {\sf Ghosh-Kate}\\\hline
+\parbox[t]{2mm}{\multirow{2}{*}{\rotatebox[origin=c]{90}{data}}}
+	              &  client $\rightarrow$ server bytes  & $186$      & $84$    & $693$ &$1312$\\
+	              &server   $\rightarrow$ client bytes  & $148$      & $64$    & $673$ &$1376$\\\hline
+
+	\parbox[t]{2mm}{\multirow{5}{*}{\rotatebox[origin=c]{90}{computation}}}
+    & client init	     & $258\mu s\phantom{^\dagger}$   &$84  \mu s$         &$ 661 \mu s$ &$150 \mu s^*$\\
+	  & server response  & $682\mu s^\dagger$             &$263 \mu s$         &$ 306 \mu s$ &$150 \mu s^*$\\
+	  & client finish    & $233\mu s\phantom{^\dagger}$   &$180 \mu s$         &$ 218 \mu s$ &$150 \mu s^*$\\
+	  & total            &~$1173 \mu s\phantom{^\dagger}$ &$527 \mu s$         &$1185 \mu s$ &$450 \mu s^*$\\
+	  & \% client			   & $42\%$                         &$50\%$              & $74\%$ &     $67\%$\\
+	\end{tabular}
+      \caption{Performance comparison of {\sf tap}, \ntor, \hybrid, and Ghosh-Kate. The \hybrid~protocol was instantiated as in Section \ref{sec:perf} with {\sf ntruees443ep1}.\\
+      $^\dagger$ The tap benchmark reports two cases, this is the ``guessed right'' case. The other value was $890 \mu$s.\\
+      $*$ Estimates from \cite{GhoshK15}. Assumes $100 \mu s$ per Diffie-Hellman group operation and $50 \mu s$ for one multiplication and
+      one addition in the R-LWE ring. All other costs, such as sampling the R-LWE secrets, are ignored.}	
+	\label{tab:comp}
+	\end{table*}
+
+
+  \subsection{Related work} \label{sec:rel}
+  The \ntor~protocol was analyzed in a variant of the extended Canetti-Krawczyk
+  (eCK) model with support for one-way authentication~\cite{GoldbergSU13}. The
+  proof of security relies on the Gap Diffie-Hellman assumption and makes
+  extensive use of random oracles.
+
+  Ghosh and Kate \cite{GhoshK15} propose a transitionally secure circuit
+  extension handshake for Tor that relies on Ring-LWE for its forward secrecy
+  against post-quantum adversaries. Their proof is in the same one-way
+  authenticated key exchange model used in \cite{GoldbergSU13}, and makes
+  similar assumptions. There are a number of significant differences between
+  their work and ours beyond the security model. In particular their protocol
+  does not ``fall back'' to \ntor~in the event that Ring-LWE is found to be
+  completely insecure. Specifically, if Ring-LWE is found to be insecure
+  against pre-quantum adversaries, then the protocol of \cite{GhoshK15} fails
+  to provide forward secrecy against pre-quantum adversaries. The protocols
+  also differ significantly in their key derivation methods.  On the positive
+  side, their protocol is quite likely to be faster than ours as it performs
+  fewer Diffie-Hellman operations.
+
+  Bos, Costello, Naehrig, and Stebila have proposed transitionally
+  secure ciphersuites for TLS based on signed Ring-LWE \cite{Bos2015}. The same
+  work proposes hybrid ciphersuites that incorporate both elliptic curve
+  Diffie-Hellman and Ring-LWE shares.  The security of the signed Ring-LWE
+  ciphersuites is proven in the ACCE framework, however no proof is given for
+  the hybrid ciphersuites.
+
+
+\subsection{Notation}
+  We distinguish objects by typeface:
+  algorithms $\mathcal{A}$ and oracles $\mathcal{O}$,
+  $\mathsf{Primitives}$ and $\mathsf{protocols}$,
+  sets $\mathbb{E}$,
+  ordered sets $\vec{\mathbb{E}}$,
+  groups $\mathbf{G}$,
+  and {\tt strings}.
+  Sampling uniformly from a set is denoted $x \samples \mathbb{S}$.
+  Assignment from a function $f(\cdot)$, even if $f$ is randomized,
+  is denoted $x = f(y)$.
+  Persistent program state will be denoted by Greek letters, in particular
+  $\pi$. Assignment to a persistent variable within a given persistent state
+  $\pi$ is written $\pi.x = y$. We will access persistent state by writing $x$
+  rather than $\pi.x$ provided that doing so is completely unambiguous.
+
+
+\section{Security model}\label{sec:acce}
+
+  The \emph{authenticated and confidential channel establishment} (ACCE)
+  model was proposed by Jager, Kohlar, Sch\"age, and Schwenk to prove the
+  security of TLS with signed ephemeral Diffie-Hellman ciphersuites and mutual
+  authentication \cite{Jager2012}. The model has been successfully extended to
+  yield proofs of security for a variety of real-world protocols.  Extensions
+  to more common setting of one-way, \emph{server-only}, authentication were
+  provided by Kohlar, Sch\"age, and Schwenk \cite{Kohlar2013}, and by Krawczyk,
+  Paterson, and Wee \cite{Krawczyk2013}.  The server-only ACCE model was later
+  used by Bos, Costello, Naehrig, and Stebila to prove the security of Ring-LWE
+  based TLS ciphersuites \cite{Bos2015}.
+
+  % The success of the ACCE model is due, in part, to how it merges the
+  % definitions of authenticated key exchange and authenticated encryption into a
+  % single definition of a secure channel. To do so, it separates a key exchange
+  % into a pre-accept phase, before the parties have agreed on a common key, and
+  % a post-accept phase, when the parties use that key for authenticated
+  % encryption.  This separation into pre- and post-accept phases allows us to
+  % give very natural definitions of pre-quantum, transitional, and post-quantum
+  % security for ACCE protocols.
+
+\subsection{Security definitions}
+    An ACCE protocol is a two-party secure communition protocol consisting of
+    two phases.  In the first phase, the \emph{pre-accept} phase, the parties
+    exchange a key. In the \emph{post-accept} phase the parties use the key to
+    exchange messages encrypted with an authenticated encryption scheme.
+
+    %An execution of the protocol is a \emph{session} between
+    %two \emph{parties}.  The negotiation protocol allows the parties to agree
+    %on a common sub-protocol, or \emph{ciphersuite}, to use during the session.
+    %The ciphersuite specifies the interactive computation that the parties will
+    %perform in order to establish a secure channel.
+
+    The ACCE execution environment allows us to model the concurrent execution
+    of one or more protocols by multiple parties. The environment involves
+    $n_P$ parties, $\mathbb{P} = \{P_i : i \in \{1, \dots, n_P\} \}$, each of whom may be
+    involved in at most $n_S$ sessions. The $s$-th session involving party $i$
+    is modeled by a stateful \emph{session oracle} $\p{i}{s}$.  We refer to
+    both the oracle and its collection of internal state as $\p{i}{s}$. The
+    internal state kept by these oracles is as follows:
+
+    \pagebreak
+    \begin{definition}[Per-session variables~\cite{Bergsma2014}]
+      Let $\p{i}{s}$ denote the following collection of \emph{per-session} variables:
+      \begin{itemize}
+        \item $\rho \in \{\init, \resp\}$: The party's role in this session.
+        \item $pid \in \{1, \dots, n_P, \bot\}$: The identifier of the alleged peer for this session, or $\bot$ for an unauthenticated peer.
+        \item $\alpha \in \{\inprog, \reject, \accept\}$: The status.
+        \item $K$: A session key, or $\bot$ if a key has not been negotiated.
+          Note that $K$ may consist of several concatenated sub-keys.
+        \item $sid$: A session identifier defined by the protocol.
+        \item $st_e, st_d$: State for the stateful authenticated encryption and decryption algorithms.
+        \item Any additional state specific to the protocol.
+        \item Any additional state specific to the security experiment.
+      \end{itemize}
+    \end{definition}
+
+    The state of all $n_Pn_S$ session oracles is initially uninitialized with
+    the exception of a random bit, $\p{i}{s}.b \samples \{0,1\}$, that is
+    required by the security experiment.
+
+    All interaction between the session oracles is mediated by an oracle,
+    $\Oracle{C}$, called the challenger.  The challenger has a global view of
+    the execution environment and may manipulate the state of session oracles.
+    The following queries to $\Oracle{C}$ are allowed.
+    \begin{itemize}
+      \item $\Send(\p{i}{s},m) \rightarrow m'$. Causes the oracle
+        $\p{i}{s}$ to execute the next routine of its handshake protocol with
+        input $m$. The input $m$ may be a special initialization string that
+        specifies the protocol, the role, and (optionally) a peer identifier.
+        In this case $\p{i}{s}$ sets $\p{i}{s}.\rho$ and $\p{i}{s}.pid$
+        accordingly. Otherwise $\p{i}{s}$ processes the message in accordance
+        with the protocol specification, updates its internal state, and
+        (optionally) outputs an outgoing message $m'$. Note that if $\p{i}{s}$
+        has reached the $\accept$ or $\reject$ state then it will return
+        $\bot$ to any $\Send$ query issued.
+
+      \item $\Reveal(\p{i}{s}) \rightarrow \p{i}{s}.K$. Returns the session key
+        $\p{i}{s}.K$ if it is initialized, otherwise $\bot$. Note that
+        $\p{i}{s}.K$ is initialized iff $\p{i}{s}.\alpha = \accept$.
+
+      \item $\Corrupt(P_i) \rightarrow sk$. Returns the long-term secret of
+        party $P_i$. This may allow the adversary to simulate $P_i$ by forging
+        $\Send$ queries.
+
+      \item $\Encrypt(\p{i}{s}, m_0, m_1, \Token{len}, H) \rightarrow C \text{~or~} \bot$.
+        If the session key $\p{i}{s}.K$ is initialized then this query
+        causes the oracle $\p{i}{s}$ to encrypt a message under its session
+        key. Otherwise the oracle returns $\bot$. The exact behavior may be
+        found in Algorithm \ref{alg:Encrypt}, but this depends on the specifics
+        of the security experiment (Section \ref{sec:sacceexp}) and the definition of
+        stateful length-hiding authenticated encryption (Section \ref{sec:slhae}).
+
+      \item $\Decrypt(\p{i}{s}, C, H) \rightarrow m \text{~or~} \bot$.
+        If the $\p{i}{s}.K$ is initialized then this query
+        causes the oracle $\p{i}{s}$ to execute Algorithm \ref{alg:Decrypt} and
+        return its output. Otherwise the oracle returns $\bot$.
+    \end{itemize}
+
+    \begin{remark}
+    Queries to distinct oracles may be issued in parallel, but a partial order
+    is kept to properly handle $\Corrupt$ queries. More formally, we say $P_j$ is
+    $\tau_j$-corrupted if the $\tau_j$-th query was $\Corrupt(P_j)$.
+    \end{remark}
+
+  \subsection{Server-only ACCE security}\label{sec:sacceexp}
+    We follow \cite{Krawczyk2013} in our definition of server-only ACCE (SACCE)
+    protocols.
+
+    The server-only ACCE (SACCE) security of a protocol is defined by an
+    experiment involving the challenger $\Oracle{C}$ and an adversary
+    $\Oracle{A}$. The challenger simulates $n_P$ parties with whom the
+    adversary interacts via $\Send, \Reveal, \Corrupt, \Encrypt,$ and
+    $\Decrypt$ queries. We make no restrictions on the computational power of
+    the adversary. The adversary may, for example, perform quantum computation.
+    That said, we require all communication with the session oracles to be
+    classical.
+
+    The parties are partitioned into servers $\mathbb{S}$ and clients
+    $\mathbb{C}$; $\mathbb{P} = \mathbb{S} \cup \mathbb{C}$. Servers are
+    permitted to take the initiator role (i.e. to act as clients), but clients
+    cannot take the responder role.
+
+    At the beginning of the game the challenger generates long-term
+    public/private key pairs for all servers and reveals the public keys to the
+    adversary. The adversary submits any number of $\Send,~\Reveal,~\Corrupt,~
+    \Encrypt,$ and $\Decrypt$ queries, then ends the experiment by outputting a
+    triple \[(i, s, b') \in \{1, \dots, n_P\} \times \{1, \dots, n_S\} \times \{0,1\}.\]
+
+    The adversary is successful if it violates either the authenticity of the
+    key exchange, or the security of the established channel. The following
+    definitions formalize the adversary's success criteria.
+
+    \begin{definition}[Matching Sessions]\label{def:ms}
+      We say that $\p i s$ matches $\p j t$ if
+      \begin{itemize}
+        \item $\p{i}{s}.\rho \ne \p{j}{t}.\rho$ (the roles are distinct)
+        \item $\p{i}{s}.sid = \p{j}{t}.sid$ (the sessions have identical transcripts).
+      \end{itemize}
+    \end{definition}
+
+    Intuitively, matching sessions that have reached the accept state have
+    successfully negotiated an authentic key. An adversary violates the
+    authenticity of the key exchange if it causes a party to accept without
+    a matching session. The following definition captures the exact conditions
+    in which an adversary succeeds in violating the authenticity of a protocol.
+    Note that this definition is specific to one-way authenticated protocols in
+    which the authenticated party is the responder.
+
+    \begin{definition}[$\p i s $ accepts maliciously]\label{def:ma}
+      Let $\p i s$ be a session. We say that $\p i s$ \emph{accepts maliciously}
+      if
+      \begin{itemize}
+        \item $\p{i}{s}.\rho = \init$;
+        \item $\p{i}{s}.\alpha = \accept$;
+        \item $\p{i}{s}.pid = j \ne \bot$ and no $\Corrupt(j)$ query was issued before $\p i s$
+          accepted; and
+        \item there is no unique session $\p j t$ that matches $\p i s$.
+      \end{itemize}
+     For a one-way authenticated protocol $\Pi$ and an adversary $\Oracle{A}$,
+     $\AcceSa{\Pi}{A}$ is the probability that there exists a session that has
+     accepted maliciously when $\Oracle{A}$ terminates.
+    \end{definition}
+
+    \begin{definition}[Channel Security]\label{def:cs}
+      We say that $\Oracle{A}$ \emph{answers the encryption challenge correctly}
+      if, when $\Oracle{A}$ terminates with output $(i, s, b')$,
+      \begin{itemize}
+        \item $\p{i}{s}.\alpha = \accept$;
+        \item $\p{i}{s}.pid = j \ne \bot$;
+        \item $\p{i}{s}$ did not accept maliciously;
+        \item $\p{i}{s}$ accepted in response to query $\tau_0$ and party $P_j$ is $\tau_j$-corrupted with $\tau_0 < \tau_j$;
+        \item $\Oracle{A}$ did not issue $\Reveal(\p{i}{s})$ nor $\Reveal(\p{j}{t})$ for any $(j,t)$ such that $\p{j}{t}$ matches $\p{i}{s}$;
+        \item $\p{i}{s}.b = b'$.
+      \end{itemize}
+      For a protocol $\Pi$, $\AcceAe{\Pi}{A} = \abs{p - 1/2}$ where $p$ is the
+      probability that $\Oracle{A}$ answers the encryption challenge correctly.
+    \end{definition}
+
+    These definitions naturally correspond to security experiments that we denote
+    $\Experiment{sacce-sa}$ (SACCE Server Authentication) and
+    $\Experiment{sacce-ae}$ (SACCE Authenticated Encryption) respectively. 
+
+    \begin{remark}
+    Our definition of channel security differs from that given in previous work such as
+    \cite{Jager2012, Bergsma2014, Krawczyk2013}. Specifically we have added the requirement that $\p i s$ has
+    not accepted maliciously. This change allows us to distinguish between adversaries that can \emph{only}
+    violate channel security by violating authenticity, and those that can violate channel security
+    without active intervention in the pre-accept stages. In turn this allows us to model security against
+    harvest-then-decrypt attacks where the adversary gains quantum capabilities after the session has
+    been negotiated.
+    \end{remark}
+
+    \begin{definition}[Pre-quantum SACCE Security]
+      \label{def:prequantum}~\\
+      A protocol $\Pi$ provides \emph{pre-quantum SACCE security} if the quantity
+      \[\AcceSa{\Pi}{A} + \AcceAe{\Pi}{A}\]
+      is a negligible function of the security parameter $\lambda$ for all
+      PPT pre-quantum adversaries $\Oracle{A}$.
+    \end{definition}
+
+    \begin{definition}[Transitional SACCE Security]
+      \label{def:transitional}~\\
+      A protocol $\Pi$ provides \emph{transitional SACCE security} if the quantity
+      \[\AcceSa{\Pi}{A} + \AcceAe{\Pi}{Q}\]
+      is a negligible function of the security parameter $\lambda$ for all
+      PPT pre-quantum adversaries $\Oracle{A}$ and PPT post-quantum adversaries $\Oracle{Q}$.
+    \end{definition}
+
+    \begin{definition}[Post-quantum SACCE Security]
+      \label{def:postquantum}~\\
+      A protocol $\Pi$ provides \emph{post-quantum SACCE security} if the quantity
+      \[\AcceSa{\Pi}{Q} + \AcceAe{\Pi}{Q}\]
+      is a negligible function of the security parameter $\lambda$ for all
+      PPT post-quantum adversaries $\Oracle{Q}$.
+    \end{definition}
+
+    \pagebreak
+    \begin{remark}
+      The restriction on malicious acceptance in Definition \ref{def:cs} is
+      necessary to distinguish between transitional and post-quantum ACCE
+      protocols.  Without it there are no transitional protocols that are not
+      fully post-quantum. The restriction has no effect on the classes of pre-
+      and post-quantum ACCE protocols; a pre- or post-quantum ACCE protocol
+      that is secure using our definition would also be secure if malicious
+      acceptance were allowed in Definition \ref{def:cs}. The converse is true
+      as well.
+    \end{remark}
+
+    \subsection{Selective SACCE security}
+    In order to simplify our proofs, we will make use of the \emph{selective} variants
+    of the authentication and channel security experiments introduced in
+    \cite{Krawczyk2013}. We denote these by $\Experiment{s-sacce-sa}$ and
+    $\Experiment{s-sacce-ae}$ respectively. In the selective authentication
+    experiment the adversary must commit to the index $(i^*, s^*)$ of a
+    session that will accept maliciously. In the selective channel
+    security experiment the adversary must commit to indices for a pair of
+    matching sessions, i.e.  $(i^*, s^*)$ and $(j^*, t^*)$.
+
+    \begin{lemma}[Adapted from \cite{Krawczyk2013}]\label{lem:selective}
+      For any adversary $\Oracle{A}$ (pre-quantum or post-quantum), there exists an adversary $\Oracle{B}$ such that
+      \begin{align*}
+        \AcceSa{\Pi}{A} &\le n_Sn_P\Adv{\Pi}{s-sacce-sa}{B}\\
+        \AcceAe{\Pi}{A} &\le n_S^2n_P\Adv{\Pi}{s-sacce-ae}{B}\\
+      \end{align*}
+    \end{lemma}
+
+    Note that the corresponding lemma given in \cite{Krawczyk2013} has an
+    additional factor of $n_S\Adv{\Pi}{s-sacce-sa}{B}$ in the reduction from
+    $\Experiment{sacce-ae}$ to $\Experiment{s-sacce-ae}$. This is because that work
+    allows sessions to have accepted maliciously in the channel security game.
+
+  \subsection{Summary of changes to ACCE model}
+    \begin{itemize}
+      \item We explicitly allow adversaries to perform quantum computations,
+        but we require that communication between the adversary and challenger
+        is classical.  We justify our decision not to use a fully quantum model
+        in Section \ref{sec:otherconcerns}.
+
+      \item Our definition of channel security differs from previous work,
+        such as \cite{Jager2012, Krawczyk2013}, in that we require that the session
+        indicated by the adversary has not accepted maliciously.
+    \end{itemize}
+
+  \subsection{Assumptions on primitives}
+  We will need two length parameters: $\mu$ and $\lambda$. We will assume that
+  $\mu = 2\lambda$ and that $\lambda$ is the intended bit-security of the
+  handshake. All cryptographic primitives are expected to provide at least
+  $\lambda$-bit pre-quantum security; symmetric primitives and KEMs should
+  provide $\lambda$-bit post-quantum security. This implies that the length of a
+  Diffie-Hellman share should be $\mu$ bits and that the post-quantum
+  KEMs should encapsulate uniform random bitstrings of length $\mu$. Likewise,
+  the pseudorandom functions should have output length $\mu$.
+
+  Our security proofs rely on a number of standard assumptions such as the
+  Decisional Diffie-Hellman (DDH) assumption, the existence of Pseudorandom
+  Functions (PRF), and ciphertext indistinguishability under chosen plaintext
+  attacks (IND-CPA) for key encapsulation mechanisms.
+
+  An adversary $\Oracle{A}$ has advantage
+  \begin{enumerate}
+    \item $\AdvDdh{A}$ of distinguishing $(g^x, g^y, g^{xy})$ from $(g^x, g^y, g^w)$ for
+      a random $w$;
+    \item $\AdvPrf{\PRF}{A}$ of distinguishing $\PRF$ from a random function; and
+    \item $\IndCpa{\Pi}{A}$ of violating IND-CPA security of $\Pi$.
+  \end{enumerate}
+
+  We also rely on the less standard Oracle Diffie-Hellman (ODH) assumption for
+  a group $\mathbf{G}$ and a hash function $\Hash$. We will refer to a tuple
+  $(g^u, g^v, h, \mathcal{H}_v)$ as an ODH instance. The ODH assumption is that
+  distinguishing $\Hash(g^{uv})$ from a random string is hard given $g^u$,
+  $g^v$, and an oracle, $\mathcal{H}_v$ that evaluates $\Hash(W^v)$ for
+  arbitrary $W \ne g^u$. The ODH instance includes a value $h$ that is
+  generated as $\Hash(g^{uv})$ or as $h \samples \{0,1\}^\mu$ with equal
+  probability. The oracle Diffie-Hellman assumption was introduced in
+  \cite{Abdalla2001}, and variants have been used to prove the security of TLS
+  ciphersuites in the ACCE model \cite{Jager2012, Krawczyk2013}. An adversary's
+  advantage in the ODH game is $\AdvOdh{A}$.  This advantage measure is well
+  defined with respect to post-quantum adversaries, however whenever we
+  evaluate it for a post-quantum adversary we will assume it is equal to $1$.
+
+  % Lastly we require a stateful length-hiding authenticated encryption (sLHAE)
+  % scheme. Discussion of such schemes may be found in
+  % \cite{Paterson2011,Jager2012,Krawczyk2013}.
+
+  We also require an extract-and-expand key derivation function and a stateful
+  length-hiding authenticated encryption scheme.
+
+  \subsection{Extract-and-expand key derivation functions}
+    The extract-and-expand construction for key derivation functions was
+    introduced by Krawczyk in \cite{Krawczyk2010}. Following the generic
+    construction given in the same work, we consider three functions: $\KDF$, a
+    key derivation function; $\PRF$, a pseudorandom function; and $\XTR$, a
+    randomness extractor. For our application we will require that $\XTR$ is a
+    generic statistical randomness extractor. A formal definition can be found
+    in \cite{Krawczyk2010}, but this essentially means that it produces uniform
+    random output from \emph{every} source of sufficiently high min-entropy.
+    Generic extractors require a salt input, so our $\XTR$ will take the form:
+    \[\XTR : \{0,1\}^* \times \{0,1\}^* \rightarrow \{0,1\}^\mu.\] The first
+    input is a random non-secret salt, and the second input is secret key
+    material. We keep this form in order to stay close to what would actually
+    be deployed in practice, but we will ultimately model $\XTR$ as a random
+    oracle.
+
+    The function $\KDF$ takes an extractor salt $xts$, context information
+    $ctx$, secret key material $skm$, and the length of the desired key $\ell$.
+    The output $K$ of $\KDF(xts, ctx, skm, \ell)$ is computed as
+    \begin{enumerate}
+      \item $prk = \XTR(xts, skm)$
+      \item $K = \PRF^*(prk, ctx, \ell)$.
+    \end{enumerate}
+    Here $\PRF^*$ is an output feedback mode for $\PRF$ that enables variable-length
+    expansion. For simplicity, the length parameters for $\KDF$ and $\PRF^*$ will be
+    omitted.
+
+
+\subsection{Stateful length-hiding authenticated encryption}\label{sec:slhae}
+
+  A stateful encryption scheme $\STE$ is a tuple of algorithms $(\STE.{\sf
+  Init}, \STE.{\sf Gen}, \STE.{\sf Enc}, \STE.{\sf Dec})$.  The algorithm
+  $\STE.{\sf Init}$ takes no input and outputs the state $(st_e, st_d)$ used by
+  the encryption scheme. The algorithm $\STE.{\sf Gen}$ samples a key $K$ from
+  the keyspace. The algorithm $\STE.{\sf Enc}$ takes a secret key $K$, a
+  ciphertext length $\ell$, header data $h\in\{0,1\}^*$, a plaintext $m \in
+  \{0,1\}^*$, and the current state $st_e$. It outputs a ciphertext
+  $C\in\{0,1\}^\ell$ and the updated state $st_e'$. The encryption algorithm
+  returns $\bot$ iff the message is of an invalid length.
+  The algorithm $\STE.{\sf Dec}$ takes a key $K$, header data $h$, a ciphertext
+  $C$, and the current state $st_d$. It outputs the corresponding decryption $m'$
+  of $C$ and the updated state $st_d$.
+
+  A stateful encryption scheme is correct if any sequence of encryptions and
+  decryptions
+  \begin{align*}
+  \left\{(C_{i}, st_e^{i}) = \STE.{\sf Enc}(K, \ell_i, h_i, m_i, st_e^{i-1})\right\}_{1\le i \le n},\\
+  \left\{(m'_{i}, st_d^{i}) = \STE.{\sf Dec}(K, \ell_i, h_i, C_i, st_d^{i-1})\right\}_{1 \le i \le n},
+  \end{align*}
+  for which no $C_i = \bot$, satisfies $m_i = m_i'$.
+  Note that the sequences must start from
+  $(st_e^0, st_d^0) = \STE.{\sf Init}()$ and a valid key $K = \STE.{\sf Gen}()$.
+
+  We will require the stateful encryption schemes used in \hybrid~to
+  be secure with respect to the following stateful Length-Hiding Authenticated
+  Encryption (sLHAE) experiment. The experiment is typically defined with
+  respect to a stateful challenger, but we will give a description, specific
+  to our environment, where the state is held by a pair of ACCE session oracles.
+  More formal definitions may be found in \cite{Krawczyk2013}.
+
+  When a session oracle $\p{i}{s}$ enters the $\accept$ state with
+  a unique matching session $\p{j}{t}$ it sets:
+  \begin{itemize}
+    \item $(\p{i}{s}.st_e^0, \p{i}{s}.st_d^0) = \STE.{\sf Init}()$,
+    \item $\p{i}{s}.u = 0$,
+    \item $\p{i}{s}.v = 0$,
+    \item and initializes $\p{i}{s}.C$ as an empty list.
+  \end{itemize}
+
+  Examining Algorithms \ref{alg:Encrypt} and \ref{alg:Decrypt} one can see that
+  there are two distinct settings based on whether $\p{i}{s}.b = 0$ or $1$.
+  These definitions of the $\Encrypt$ and $\Decrypt$ oracles make it such that:
+  \begin{itemize}
+    \item When $\p{i}{s}.b = 0$ the adversary is given an encryption oracle
+      for $m_0$ and a decryption oracle that always returns $\bot$.
+    \item When $\p{i}{s}.b = 1$ the adversary is given an encryption oracle
+      for $m_1$ and a decryption oracle that returns the correct decryption
+      only after $\phase$ is set to $1$.
+  \end{itemize}
+
+  The sLHAE experiment allows an adversary $\Oracle{A}$ to make an arbitrary
+  number of $\Encrypt$ queries (Algorithm \ref{alg:Encrypt}) to $\p{i}{s}$ and
+  an arbitrary number of $\Decrypt$ queries (Algorithm \ref{alg:Decrypt}) to
+  $\p{j}{t}$ before outputting a guess $b'$ of $\p{i}{s}.b$. The adversary's
+  advantage is \[\AdvSlhae{A} = \abs{\CPrb{b' = \p{i}{s}.b} - 1/2}.\]
+
+\floatstyle{ruled}
+\restylefloat{figure}
+\captionsetup[figure]{name=Alg.}
+
+  \begin{figure}
+  \caption{$\Encrypt(\p{i}{s}, m_0, m_1, \Token{len}, H)$}
+  \label{alg:Encrypt}
+  \begin{algorithmic}
+    \STATE $(C^{(0)}, st_e^{(0)}) = \PEnc{c}(\p{i}{s}.K_e, \Token{len}, H, m_0, \p{i}{s}.st_e)$
+    \STATE $(C^{(1)}, st_e^{(1)}) = \PEnc{c}(\p{i}{s}.K_e, \Token{len}, H, m_1, \p{i}{s}.st_e)$
+    \IF{$C^{(0)} = \bot$ or $C^{(1)} = \bot$}
+    \STATE \bf{return} $\bot$
+    \ENDIF
+    \STATE $\p{i}{s}.u = \p{i}{s}.u + 1$
+    \STATE $\p{i}{s}.st_e = st_e^{(\p{i}{s}.b)}$
+    \STATE $\p{i}{s}.C[\p{i}{s}.u] = C^{(\p{i}{s}.b)}$
+    \STATE $\p{i}{s}.H[\p{i}{s}.u] = H$
+    \STATE \bf{return} $\p{i}{s}.C[\p{i}{s}.u]$
+  \end{algorithmic}
+  \end{figure}
+
+  \begin{figure}
+  \caption{$\Decrypt(\p{i}{s}, C, H)$}
+  \label{alg:Decrypt}
+  \begin{algorithmic}
+    \REQUIRE $\p{j}{t}$ is a unique matching session to $\p{i}{s}$.
+    \IF{$\p{i}{s}.b = 0$}
+    \STATE \bf{return} $\bot$
+    \ENDIF
+    \STATE $\p{i}{s}.v = \p{i}{s}.v + 1$
+    \STATE $(m, \p{i}{s}.st_d) = \PDec{c}(\p{i}{s}.K_d, H, C, \p{i}{s}.st_d)$
+    \IF{$\p{i}{s}.v > \p{j}{t}.u$ or $C \ne \p{j}{t}.C[\p{i}{s}.v]$ or $H \ne \p{j}{t}.H[\p{i}{s}.v]$}
+    \STATE $\phase = 1$
+    \ENDIF
+    \STATE \bf{if}~$\phase = 1$~\bf{then} \bf{return}~$m$~\bf{end if}
+    \STATE \bf{return} $\bot$
+  \end{algorithmic}
+  \end{figure}
+
+\floatstyle{plain}
+\restylefloat{figure}
+\captionsetup[figure]{name=Fig.}
+
+\section{Protocols}\label{sec:hybrid}
+\subsection{Generic hybrid protocol}
+  \begin{figure*}[ht]
+	  \[
+	  \begin{array}{@{}l@{}c@{}l@{}}
+	  \toprule
+    \text{Anonymous client} && \text{Server with long-term DH key $(a,A)$}\\
+    && \text{and identity digest $\widehat{P_j}$}\\
+	  (x,X) = \dhgen(1^\lambda) &&\\
+	  (esk_1, epk_1) = \KeyGen_1(1^\lambda) &&\\
+	  & \xrightarrow{\quad \textstyle X, epk_1 \quad} \\
+    && (y,Y) = \dhgen(1^\lambda)\\
+	  &&s_0 = \Hash(X^a)\\
+    &&s_1 = X^y\\
+    &&s_2\samples \mathbb{M}_1 \\
+	  &&ct_1 = \Encaps_1(s_2, epk_1)  \\
+    &&pms = s_0\con s_1\con s_2\\
+    &&T = \widehat{P_j}\con A\con X\con Y\con epk_1\con ct_1 \\
+	  && prk = \XTR(T, pms)\\
+    && auth = \PRF^*(prk,\Token{t\_auth})\\
+	  & \xleftarrow{\textstyle \quad Y, ct_1, auth \quad}\\
+	  s_0 = \Hash(A^x) &&\\
+    s_1 = Y^x &&\\
+    s_2 = \Decaps_1(ct_1, esk_1) && \\
+    pms = s_0\con s_1\con s_2&&\\
+    T = \widehat{P_j}\con A\con X\con Y\con epk_1\con ct_1&&\\
+	  prk = \XTR(T, pms)&&\\
+    \multicolumn{2}{l}{{\rm ensure}~auth = \PRF^*(prk,\Token{t\_auth})} &\\
+    K = \PRF^*(prk, \Token{t\_key})&& K = \PRF^*(prk, \Token{t\_key})\\
+	  \bottomrule
+	  \end{array}
+	  \]
+    \caption{The proposed protocol with a single KEM.}\label{fig:hybrid}
+	\end{figure*}
+
+  An instantiation of the $\hybrid$ protocol must specify:
+  \begin{itemize}
+   \item unique strings $\Token{proto\_id}$,
+     $\Token{t\_auth} = \Token{proto\_id:auth}$ and $\Token{t\_key} = \Token{proto\_id:key}$;
+   \item an ordered set of $0$ or more key encapsulation mechanisms
+     \begin{align*}
+     \vec{\mathbb{E}} &= \{\AlgorithmName{KEM}_1, \dots, \AlgorithmName{KEM}_{n_E}\}\\
+     \AlgorithmName{KEM}_k &= (\KeyGen_k, \Encaps_k, \Decaps_k)
+     \end{align*}
+     with message spaces $\left\{\mathbb{M}_k\right\}_{1\le k \le n_E}$;
+   \item a hash function $\Hash$;
+   \item a generic randomness extractor $\XTR$; and
+   \item a pseudorandom function with variable length output $\PRF^*$.
+  \end{itemize}
+
+  We will refer to a specific instantiation as $\hybrid(\vec{\mathbb{E}})$ when
+  necessary. We assume that each client receives a certified copy of each
+  server's long-term public key along with associated identity information. Let
+  $P_i$ be a client and $P_j$ be a server with long-term DH key $(a, A)$.  We
+  refer to $P_j$'s identity information as its \emph{identity digest} and
+  denote it $\widehat{P_j}$. The following routines describe the actions taken
+  by $P_i$ and $P_j$ in negotiating a key using $\hybrid(\vec{\mathbb{E}})$.
+  Figure \ref{fig:hybrid} provides a higher level description for the $n_E = 1$
+  case.
+
+  \paragraph*{Client initialization}
+  When $\p{i}{s}$ is directed to execute the hybrid protocol with $P_j$ it:
+  \begin{enumerate}
+    \item Sets $\p{i}{s}.\rho = \init$, and $\p{i}{s}.pid = j$
+    \item Checks the certificate for $P_j$'s long-term key and aborts if it is invalid.
+    \item Generates an ephemeral DH keypair \[(\p{i}{s}.x,\p{i}{s}.X) = \dhgen(1^\lambda).\]
+    \item Generates an ephemeral keypair for each KEM:
+      \[(\p{i}{s}.esk_k, \p{i}{s}.epk_k) = \KeyGen_k(1^\lambda)\]
+      for $k \in \{1,\dots,n_E\}$.
+    \item Outputs $(X, epk_1, \dots, epk_{n_E})$.
+  \end{enumerate}
+
+  \paragraph*{Server response}
+  On receipt of $(X, epk_1, \dots, epk_{n_E})$, session $\p{j}{t}$:
+  \begin{enumerate}
+    \item Sets $\p{j}{t}.\rho = \resp$, and $\p{j}{t}.pid = \bot$.
+    % \item Validates $X$ and any of the $epk$'s as necessary.
+    \item Generates an ephemeral DH keypair
+      \[(\p{j}{t}.y,\p{j}{t}.Y) = \dhgen(1^\lambda).\]
+    \item Computes the Diffie-Hellman portions of the premaster secret:
+      \[\p{j}{t}.s_0 = \Hash(X^a); \quad \p{j}{t}.s_1 = X^y.\]
+    \item Encapsulates a random value from the message space of each KEM:
+      \begin{align*}
+      \p{j}{t}.s_{k+1} &\samples \mathbb{M}_k \text{~for $k \in \{1, \dots, n_E\}$}\\
+      \p{j}{t}.ct_{k} &= \Encaps_k(s_{k+1}, epk_k).
+      \end{align*}
+    \item Forms the pre-master secret
+      \[\p{j}{t}.pms = s_0\con s_1\con \dots \con s_{n_E + 1}.\]
+    \item Forms the extraction salt
+      \begin{multline}
+        \p{j}{t}.T = {}\\
+        \widehat{P_j} \con A \con X \con Y \con epk_1\con \dots \con epk_{n_E} \con ct_1 \con \dots \con ct_{n_E}.\notag
+      \end{multline}
+    \item Extracts a pseudorandom key from $pms$:\label{line:pjtxtr}
+      \[\p{j}{t}.prk = \XTR(T, pms).\]
+    \item Computes the authentication tag:\label{line:pjtprf}
+      \[\p{j}{t}.auth = \PRF^*(prk, \Token{t\_auth}).\]
+    \item Sets the session key\label{line:pjtK}
+      \[\p{j}{t}.K = \PRF^*(prk, \Token{t\_key}).\]
+    \item Sets \[\p{j}{t}.sid = (X, epk_1, \dots, epk_{n_E}, Y, ct_1, \dots, ct_{n_E}, auth)\]
+    \item Sets $\p{j}{t}.\alpha = \accept$.
+    \item Outputs $(Y, ct_1, \dots, ct_{n_E}, auth)$.
+    \item Erases all temporary values and session state not required by the security experiment.
+  \end{enumerate}
+
+  \begin{remark}
+    Steps \ref{line:pjtxtr} and \ref{line:pjtprf} are equivalent to
+      \[\p{j}{t}.auth = \KDF(T, \Token{t\_auth}, pms),\]
+  and Steps \ref{line:pjtxtr} and \ref{line:pjtK} are equivalent to
+      \[\p{j}{t}.K = \KDF(T, \Token{t\_key}, pms).\]
+  \end{remark}
+
+  \paragraph*{Client finish}
+  On receipt of $(Y, ct_1, \dots, ct_{n_E}, auth)$, session $\p{i}{s}$:
+  \begin{enumerate}
+    % \item Validates $Y$ and any of the $ct$'s, as necessary.
+    \item Computes the Diffie-Hellman portions of the premaster secret:
+      \[\p{i}{s}.s_0 = \Hash(A^x); \quad \p{i}{s}.s_1 = Y^x.\]
+    \item Decapsulates $ct_1$ through $ct_{n_E}$:
+      \[\p{i}{s}.s_{k+1} = \Decaps_k(ct_k, esk_k) \mathrm{~for~} k \in \{1, \dots, n_E\}\]
+    \item Forms $\p{i}{s}.pms$ and $\p{i}{s}.T$ as above.
+    \item Checks that $\KDF(T, \Token{t\_auth}, pms)$ matches the received
+      authentication tag and aborts with $\p{i}{s}.\alpha = \reject$ if it does not.
+    \item Sets $\p{i}{s}.K = \KDF(T, \Token{t\_key}, pms)$.
+    \item Sets \[\p{i}{s}.sid = (X, epk_1, \dots, epk_{n_E}, Y, ct_1, \dots, ct_{n_E}, auth).\]
+    \item Sets $\p{i}{s}.\alpha = \accept$.
+    \item Erases all temporary values and session state not required by the security experiment.
+  \end{enumerate}
+
+
+\subsection{The case of zero KEMs}\label{sec:ntor}
+	\begin{figure*}[ht]
+	  \[
+	  \begin{array}{@{}l@{}c@{}l@{}}
+	  \toprule
+    \text{Anonymous client} && \text{Server with long-term DH key $(a,A)$}\\
+    && \text{and identity digest $\widehat{P_j}$}\\
+	  (x,X) = \dhgen(1^\lambda) &&\\
+	  & \xrightarrow{\quad \textstyle X \quad}\\
+    && (y,Y) = \dhgen(1^\lambda)\\
+	  && pms = X^y \con X^a \\
+    && T_1 = \widehat{P_j}\con A\con X\con Y \con \Token{proto\_id}\\
+    && T_2 = \widehat{P_j}\con A\con Y\con X \con \Token{proto\_id} \con \Token{Server}\\
+    && vk = \HMAC(\Token{t\_verify}, pms \con T_1)\\
+    && auth = \HMAC(\Token{t\_mac}, vk\con T_2)\\
+	  & \xleftarrow{\textstyle \quad Y, auth \quad}\\
+	  pms = Y^x \con A^x &&\\
+    T_1 = \widehat{P_j}\con A\con X\con Y \con \Token{proto\_id} &&\\
+    T_2 = \widehat{P_j}\con A\con Y\con X \con \Token{proto\_id} \con \Token{Server} &&\\
+    vk = \HMAC(\Token{t\_verify}, pms \con T_1)&&\\
+    \multicolumn{2}{l}{{\rm ensure}~auth = \HMAC(\Token{t\_mac}, vk \con T_2)} &\\
+    prk = \HMAC(\Token{t\_key}, pms \con T_1)&&prk = \HMAC(\Token{t\_key}, pms \con T_1)\\
+    K = \HMAC^*(prk, \Token{m\_expand})&& K = \HMAC^*(prk, \Token{m\_expand})\\
+	  \bottomrule
+	  \end{array}
+	  \]
+    \caption{The \ntor~protocol (as described in Tor proposal \#216 \cite{TorPropNtor}).}\label{fig:ntor}
+	\end{figure*}
+
+  The $\Protocol{hybrid}$ protocol with zero additional KEMs, $n_E = 0$, is
+  almost identical to \ntor: the client sends $(X)$, and the server responds
+  with $(Y, auth)$. Figure \ref{fig:ntor} provides a high level description of
+  \ntor~for comparison with Figure \ref{fig:hybrid}. The most obvious difference is that the
+  premaster secret in \ntor~contains $g^{xa}$, whereas the premaster secret in
+  \hybrid~contains $\Hash(g^{xa})$. This is an artifact of our reduction from
+  the Oracle Diffie-Hellman problem (see Section \ref{sec:sacceauth}).
+
+  There are a few important differences regarding the use of the functions
+  $\XTR$ and $\PRF$. These have direct analogues in the deployed instantiation
+  of \ntor, but are treated as random oracles in \cite{GoldbergSU13}.  The
+  formal description of \ntor~specifies the use of three distinct hash
+  functions, but the proof does not specify any concrete requirements for the
+  hash functions to satisfy. In the engineering specification
+  \cite{TorPropNtor} the hash functions are replaced by a single
+  pseudorandom function with three distinct non-secret keys.  In the deployed
+  implementation, the pseudorandom function is instantiated with
+  $\HMACS$ and the keys are taken to be ASCII strings that
+  include a protocol identifier and the intended use for the hash value, e.g.
+  \[\Token{ntor-curve25519-sha256-1:key\_extract}.\] The engineering
+  specification also switches from a hash function to
+  $\HKDFS$ for the key derivation function.  The end
+  result of these modifications is that the authentication tag and key are
+  computed as:
+  \begin{align*}
+    pms &= g^{xy} \con g^{xa}\\
+    T_1 &= \widehat{P_j} \con A \con X \con Y \con \Token{proto\_id}\\
+    T_2 &= \widehat{P_j} \con A \con Y \con X \con \Token{proto\_id} \con \Token{Server}\\
+    vk &= \HMACS(\Token{proto\_id:verify}, pms \con T_1)\\
+    auth &= \HMACS(\Token{proto\_id:mac}, vk \con T_2)\\
+    prk &= \HMACS(\Token{proto\_id:key\_extract}, pms\con T_1)\\
+    K &= \HMACS^*(prk, \Token{proto\_id:key\_expand})\\
+  \end{align*}
+  The use of fixed HMAC keys across all sessions and the ad-hoc concatenation
+  of public and private material (e.g.~$pms\con T_1$) forgoes the security
+  guarantees that come from using a PRF instead of a hash function.
+  In essence, this usage treats $\HMAC$ as if it were a random oracle
+  and ignores the security proofs and usage guidelines of this function.
+
+  Contrast this with the variant of \ntor~that we obtain through our \hybrid~protocol.
+  If $\HKDFS$ is used for $\KDF$, then we have $\XTR = \HMACS$ and
+  $\PRF = \HMACS$.  The authentication tag and key are computed as:
+  \begin{align*}
+    pms &= \Hash(g^{xa}) \con g^{xy}\\
+    T &= \widehat{P_j} \con A \con X \con Y\\
+    prk &= \HMACS(T, pms)\\
+    auth &= \HMACS^*(prk, \Token{proto\_id:auth})\\
+    K &= \HMACS^*(prk, \Token{proto\_id:key}).
+  \end{align*}
+  The main benefit of this approach is that it follows the recommended usage of
+  $\HKDF$ \cite{Krawczyk2010}. The approach used in \ntor~is somewhat ad-hoc,
+  but the use of $T_2$ prevents an interesting class of multi-user attacks on
+  $vk$. In Section~\ref{sec:otherconcerns} we discuss Zaverucha's multi-user
+  attack on extract-and-expand KDFs \cite{Zaverucha2012} and why the $T_2$
+  countermeasure can be omitted without seriously affecting security.
+
+\section{Security}
+  \label{sec:security}
+
+  We will now prove the security of the $\hybrid$ protocol in the SACCE model.
+  Theorem \ref{thm:ntor} considers the case of zero KEMs, and Theorem \ref{thm:hybrid}
+  considers the case of a single KEM. Generalizations to arbitrary numbers of KEMs are
+  immediate.
+
+  As discussed in Section \ref{sec:ntor}, the $\hybrid$ protocol with zero KEMs is not
+  equivalent to \ntor. However, the two protocols are very similar, and our proof
+  should provide some renewed confidence in \ntor.
+
+  The theorems follow easily from Lemmas \ref{lem:accesa} and \ref{lem:acceae}
+  of Section \ref{sec:sacceauth}.  These lemmas bound an arbitrary adversary's
+  advantage in the $\Experiment{s-acce-sa}$ and $\Experiment{s-acce-ae}$
+  experiments respectively.
+
+  \begin{theorem}\label{thm:ntor}
+    Let $\mathbf{G}$ be a finite abelian group, $\Hash$ be a cryptographic hash
+    function, $\XTR$ be a random oracle, $\PRF$ be a pseudorandom function, and
+    $\STE$ be a stateful length-hiding authenticated encryption scheme.
+    The \hybrid~protocol with zero KEMs is pre-quantum SACCE secure under the
+    ODH assumption for $(\mathbf{G}, \Hash)$, and the DDH assumption for
+    $\mathbf{G}$.
+  \end{theorem}
+
+
+  \begin{theorem}\label{thm:hybrid}
+    Let $\mathbf{G}$ be a finite abelian group, $\Hash$ be a cryptographic hash
+    function, $\XTR$ be a random oracle, $\PRF$ be a pseudorandom function, and
+    $\STE$ be a stateful length-hiding authenticated encryption scheme.  The
+    \hybrid~protocol with one post-quantum KEM provides transitional SACCE
+    security under the ODH assumption for $(\mathbf{G}, \Hash)$, and the
+    assumption of IND-CPA security for $\AlgorithmName{KEM}_1$. Furthermore,
+    the \hybrid~protocol with one pre-quantum KEM is pre-quantum SACCE secure
+    under the ODH assumption for $(\mathbf{G}, \Hash)$ and \emph{either} the
+    DDH assumption in $\mathbf{G}$ \emph{or} the IND-CPA security of
+    $\AlgorithmName{KEM}_1$.
+  \end{theorem}
+
+  \subsection{Authentication}\label{sec:sacceauth}
+We now bound an arbitrary adversary's advantage in the $\Experiment{s-sacce-ae}$ experiment.
+Let $n_P$ be an upper bound on the number of parties that the adversary initiates, and
+$n_S$ be an upper bound on the number of sessions.
+Lemma \ref{lem:accesa} holds independently of the number and types of
+additional KEMs used, so we will simply refer to the scheme as
+$\Protocol{hybrid}$.
+
+\pagebreak
+\begin{lemma}\label{lem:accesa}
+  Let $\Hash$, $\XTR$ and $\PRF$ be the functions specified by
+  $\hybrid$.  If $\XTR$ is a generic statistical randomness extractor,
+  then for any adversary $\Oracle{A}$
+  there exist algorithms $\Oracle{B_0}$ and $\Oracle{B_1}$, each with running
+  time that is an additive constant greater than that of $\Oracle{A}$,
+  such that:
+\begin{align*}
+\SAcceSaHybrid{A} &\le n_P\AdvOdh{B_0} + \AdvPrf{\PRF}{B_1} + 2^{-\mu}.
+\end{align*}
+\end{lemma}
+\begin{proof}
+  Let $\brk{\delta}$ be the event that a client session accepts maliciously in
+  Game $\delta$ with $\Oracle{A}$ as the adversary. Recall that in the
+  $\Experiment{s-sacce-sa}$ experiment the adversary commits to an index,
+  $(i^*, s^*)$, of a session that it will cause to accept maliciously.  Let
+  $P_j$ be the party designated by $\p{i^*}{s^*}.pid$.
+  %By the definition of malicious acceptance for one-way authenticated protocols
+  %we know that $\p{i^*}{s^*}.\rho = \init$.
+  Note that the adversary may deliver the outgoing message of $\p{i^*}{s^*}$ to
+  more than one session controlled by $P_j$.  Let $S \subseteq \{1, \dots, n_S\}$ be the
+  index set of $P_j$'s sessions to which the adversary delivers the outgoing
+  message of $\p{i^*}{s^*}$.
+  %Every $\p{j}{t}$ for $t \in S$ outputs an outgoing
+  %message that would cause $\p{i^*}{s^*}$ to accept \emph{non-maliciously} in
+  %Game \ref{gsa:dh} were it to be delivered.
+
+
+  \LGame{gsa:sa} This game is identical to the selective SACCE authentication
+  experiment, hence
+  \begin{equation}
+  \SAcceSaHybrid{A} = \Prb{\ref{gsa:sa}}.
+  \end{equation}
+
+  \LGame{gsa:dh}
+  The challenger proceeds as in Game \ref{gsa:sa}, but replaces the value $s_0
+  = \Hash(A^x)$ in session $\p{i^*}{s^*}$ with $\widetilde{s_0} \samples
+  \{0,1\}^\mu$. The challenger also replaces $\Hash(X^a)$ with
+  $\widetilde{s_0}$ in session $\p{j}{t}$ for $t \in S$.
+
+  Algorithm $\Oracle{B}_0$ takes an ODH instance $(U = g^u, V = g^v, h, \Oracle{H}_v)$
+  as input and simulates a challenger in Game \ref{gsa:sa} against adversary
+  $\Oracle{A}$. It behaves as follows:
+  \begin{itemize}
+    \item At the beginning of the game, it sets the long-term public
+      key of a randomly chosen party to $V$. Call this party $P_{j^*}$.
+    \item It aborts if $\p{i^*}{s^*}.pid \ne j^*$.
+    \item It aborts if the adversary corrupts $P_{j^*}$.
+    %Note that in this case the adversary could not have caused $\p{i^*}{s^*}$ to accept maliciously.
+    \item It sets $\p{i^*}{s^*}.X = U$ and $\p{i^*}{s^*}.s_0 = h$.
+    \item It uses $\Oracle{H}_v$ and $h$ to simulate knowledge of $P_{j^*}$'s long-term secret
+      in any session, $\p{j}{t}$, for which $\p{j}{t}.\rho = \resp$. If $\p{j}{t}.X = U$ the challenger
+      sets $\p{j}{t}.s_0 = h$; if $\p{j}{t}.X \ne U$ the challenger sets $\p{j}{t}.s_0 = \Oracle{H}_v(X)$.
+  \end{itemize}
+  Suppose that $\Oracle{B}_0$ does not abort.
+  If $h = \Hash(g^{uv})$, the algorithm provides a faithful simulation of Game \ref{gsa:sa}.
+  Otherwise, $h$ is uniformly random and the adversary's view is of Game \ref{gsa:dh}. Hence, an
+  adversary's advantage in distinguishing between these two games (when $\Oracle{B}_0$
+  does not abort) can be no greater than $\Oracle{B}_0$'s advantage in the ODH game.
+
+  The possibility that $\Oracle{B}_0$ aborts due to a $\Corrupt(P_j)$ query does
+  not change the probability that $\p{i^*}{s^*}$ accepts maliciously in Game
+  \ref{gsa:dh}. Such a corruption either occurs after $\p{i^*}{s^*}$ accepts,
+  or precludes the possibility of $\p{i^*}{s^*}$ accepting maliciously.
+  The possibility that $\Oracle{B}_0$ aborts due to $\p{i^*}{s^*}.pid \ne j$,
+  however, reduces its advantage in the ODH experiment by a factor of $n_P$.
+  Hence,
+  \begin{equation} \label{eq:gsa:dh}
+  \Prb{\ref{gsa:sa}} \le \Prb{\ref{gsa:dh}} + n_P\AdvOdh{B_0}.
+  \end{equation}
+
+  \LGame{gsa:xtr} The challenger proceeds as in Game \ref{gsa:dh} for all
+  sessions controlled by parties other than $P_j$, as well as for $P_j$'s
+  sessions not indexed by an element of $S$. For each $t \in S$ the challenger
+  replaces $\p{j}{t}.prk$ with
+  $\widetilde{prk}_t \samples \{0,1\}^\mu$.  Likewise if the adversary delivers the
+  outgoing message of $\p{j}{t}$ to $\p{i^*}{s^*}$ the challenger replaces
+  $\p{i^*}{s^*}.prk$ with $\widetilde{prk}_t$.
+
+  In Game \ref{gsa:dh} we ensure that the min-entropy of the input to $\XTR$ is
+  at least $\mu$ bits by choosing $\widetilde{s_0}$ randomly. Assuming that
+  $\XTR$ is a generic statistical randomness extractor each $\p{j}{t}.prk$ is
+  indistinguishable from a uniform random string in Game \ref{gsa:dh}.
+  In turn Game \ref{gsa:xtr} is indistinguishable from Game \ref{gsa:dh}, i.e.
+  \begin{equation}
+    \Prb{\ref{gsa:dh}} = \Prb{\ref{gsa:xtr}}.
+  \end{equation}
+
+  \LGame{gsa:abort} The challenger proceeds as in Game \ref{gsa:xtr} but aborts
+  if the adversary delivers any of the outbound messages from $\{\p{j}{t} : t
+  \in S\}$ to $\p{i^*}{s^*}$. As each of these messages would cause
+  $\p{i^*}{s^*}$ to accept non-maliciously, this change does not affect the
+  probability that $\p{i^*}{s^*}$ accepts maliciously.
+  \begin{equation}
+    \Prb{\ref{gsa:xtr}} = \Prb{\ref{gsa:abort}}.
+  \end{equation}
+
+  \LGame{gsa:prf} The challenger proceeds as in Game \ref{gsa:abort} but
+  replaces $\PRF$ in session $\p{i^*}{s^*}$ with a random function $F$. In
+  Game \ref{gsa:abort} the value $\p{i^*}{s^*}.prk$ is uniformly random.
+  Consequently, if $\Oracle{A}$ can distinguish Game \ref{gsa:prf} from Game
+  \ref{gsa:abort}, then there exists an algorithm $\Oracle{B}_1$ that runs in
+  essentially the same time that can answer a PRF challenge.
+
+  Specifically, we construct an algorithm $\Oracle{B}_1$ that solves a PRF
+  challenge for the string $\Token{t\_auth}$. It takes as input $z \in \{0,1\}^\mu$
+  that is promised to have been generated either as $z \samples \{0,1\}^\mu$ or as
+  $z = \PRF(k, \Token{t\_auth})$ for some $k \samples \{0,1\}^\mu$. It then simulates a
+  challenger in Game \ref{gsa:abort} against adversary $\Oracle{A}$, and sets
+  $\p{i^*}{s^*}.auth = z$.
+
+  If $z$ was generated as $\PRF(k, \Token{t\_auth})$ then the adversary's view is identical to
+  Game \ref{gsa:abort}.  Otherwise $z$ was generated randomly and the
+  adversary's view is of Game \ref{gsa:prf}. Thus $\Oracle{B}_1$ wins the PRF
+  game with advantage equal to the game distinguisher's advantage:
+  \begin{equation}\label{eq:gsa:xtr}
+    \Prb{\ref{gsa:abort}} \le \Prb{\ref{gsa:prf}} + \AdvPrf{\PRF}{B_1}.
+  \end{equation}
+
+  \paragraph*{Final analysis.}
+    The only way the adversary can cause $\p{i^*}{s^*}$ to accept without a
+    matching session in Game \ref{gsa:prf} is to guess the value of
+    $F(\widetilde{prk}, \Token{t\_auth})$. Since $F$ is a random function they
+    are successful with probability $2^{-\mu}$, hence
+    \begin{equation}\label{eq:gsa:prf}
+      \Prb{\ref{gsa:prf}} = 2^{-\mu}.
+    \end{equation}
+
+    This establishes the claim.
+\end{proof}
+
+
+\subsection{Channel security}
+
+  We now bound an arbitrary adversary's advantage in the $\Experiment{s-sacce-ae}$ experiment.
+  Again let $n_P$ be an upper bound on the number of parties that the adversary initiates, and
+  $n_S$ be an upper bound on the number of sessions. Let $n_E$ be the number of KEMs used in
+  the $\hybrid$ protocol and let $\vec{\mathbb{E}} = (\AlgorithmName{KEM}_1, \dots, \AlgorithmName{KEM}_{n_E})$.
+
+\begin{lemma}\label{lem:acceae}
+  Let $\XTR$, $\PRF$, and $\STE$ be the functions specified by $\hybrid(\vec{\mathbb{E}})$.
+  If $\XTR$ is a generic statistical randomness extractor, then for any adversary,
+  $\Oracle{A}$, there exist algorithms $\Oracle{B_{2.0}}, \Oracle{B_{2.1}}\dots,
+  \Oracle{B_{2.n_E}}, \Oracle{B_4}$, and $\Oracle{B_5}$, each with running time
+  that is an additive constant greater than that of $\Oracle{A}$, such that
+  \begin{multline}
+    \SAcceAeHybridK{A} \le \AdvPrf{\PRF}{B_4} + \AdvSlhae{B_5} +{}\\
+    \min\left\{\AdvDdh{B_{2.0}}, \min_{1\le k\le n_E}\left\{\IndCpa{KEM_k}{B_{2.k}}\right\}\right\}\notag
+  \end{multline}
+\end{lemma}
+\begin{proof}
+
+\stepcounter{GameSet}
+  %Without loss of generality we assume $\Oracle{A}$ outputs $(i, s, b')$.
+
+  Recall that in the $\Experiment{s-acce-ae}$ experiment the adversary commits to a
+  matching pair of sessions, $\p{i^*}{s^*}$ and $\p{j^*}{t^*}$, in which the initiator
+  does not accepted maliciously.
+  We assume, without loss of generality, that $\p{i^*}{s^*}$ has the role of initiator.
+  The adversary's output is either $(j^*, t^*, b^*)$ or $(i^*, s^*, b^*)$.
+
+  Let $\brk{\delta}$ be the event that $\Oracle{A}$ answers the encryption challenge
+  successfully in Game $\delta$, e.g. that $\Oracle{A}$ output $(i^*, s^*, b^*)$ and $b^* = \p{i^*}{s^*}.b$.
+
+  \LGame{gcs:ae} This game is identical to the selective SACCE channel security
+  experiment. By definition,
+  \begin{equation}
+  \SAcceAeHybridK{A} = \abs{\Prb{\ref{gcs:ae}} - 1/2}.
+  \end{equation}
+
+  We now consider $n_E+1$ games that each replace one share of the
+  premaster secret (one of $s_1, s_2, \dots, s_{n_E+1}$) with a uniform random
+  value from the appropriate sample space. We show that an advantage in distinguishing
+  any of these games from Game \ref{gcs:ae} implies a corresponding advantage in either an
+  IND-CPA or a DDH challenge. To simplify our proof, we assume that $s_1$ is the only secret
+  protected by the DDH assumption and we treat it separately in Game \ref{gcs:sub}.0.
+
+  \refstepcounter{GameNum}\label{gcs:sub}
+  \paragraph*{Game \theGameNum.0}
+  The challenger proceeds as in Game \ref{gcs:ae}, however when it simulates sessions
+  $\p{i^*}{s^*}$ and $\p{j^*}{t^*}$ it replaces $s_1$ with $\tilde s_1 \samples \mathbf{G}$.
+
+  The algorithm $\Oracle{B}_{\theGameNum.0}$ interpolates between Games
+  \ref{gcs:ae} and \ref{gcs:sub}$.0$ by embedding the values from a DDH
+  challenge $(\tilde{X}, \tilde{Y}, \tilde{U})$ as $\p{i}{s}.X, \p{j}{t}.Y$ and
+  $s_1$ respectively. This gives us
+  \begin{equation} \label{eq:subadvddh}
+    \Prb{\ref{gcs:ae}} \le \Prb{\ref{gcs:sub}.0} + \AdvDdh{B_{\theGameNum.0}}.
+  \end{equation}
+
+  \paragraph*{Game \theGameNum.k for $k \in \{1, \dots, n_E\}$}
+  When the challenger simulates session $\p{j^*}{t^*}$ it replaces ciphertext
+  $ct_k$ with one that is unrelated to $s_{k+1}$. Specifically it generates
+  $s_{k+1}$ as usual but samples a second random value
+  $\widetilde{s_{k+1}} \samples \mathbb{M}_k$. It then sets $\p{j^*}{t^*}.ct_k =
+  \widetilde{ct}$ where $\widetilde{ct} = \Encaps_k(\widetilde{s_{k+1}}, epk_k)$.
+  In session $\p{i^*}{s^*}$ it sets $\p{i^*}{s^*}.s_{k+1} = s_{k+1}$ and
+  discards the value obtained through decapsulation.
+
+  The algorithm $\Oracle{B}_{\theGameNum.k}$ interacts with an IND-CPA
+  challenger for $\AlgorithmName{KEM}_k$. It receives a public key
+  $\widetilde{epk}$ from the challenger, samples $m_0$ and $m_1$ uniformly from
+  $\mathbb{M}_k$, and then requests an IND-CPA challenge for $m_0$ and $m_1$.
+  It receives $\widetilde{ct}$ that is promised to be an encapsulation of either
+  $m_0$ or $m_1$. It then simulates the challenger in Game \ref{gcs:ae} with
+  adversary $\Oracle{A}$ as follows:
+  \begin{itemize}
+    \item It samples a uniform bit $u$.
+    \item In session $\p{i^*}{s^*}$ it replaces $\p{i^*}{s^*}.epk_k$ with $\widetilde{epk}$,
+      and replaces $\p{i^*}{s^*}.esk_i$ with $\bot$.
+    \item In session $\p{j^*}{t^*}$ it replaces $ct_k$ with $\widetilde{ct}$.
+    \item In both $\p{i^*}{s^*}$ and $\p{j^*}{t^*}$ it sets $s_{k+1} = m_u$.
+  \end{itemize}
+
+  \break
+  If $\widetilde{ct}$ is an encapsulation of $m_u$ then
+  $\Oracle{B}_{\theGameNum.k}$ provides a faithful simulation of Game
+  \ref{gcs:ae}. Otherwise $\widetilde{ct}$ is an encapsulation of $m_{1-u}$ and
+  the adversary's view is of Game \ref{gcs:sub}$.k$.
+
+  Since $\XTR$ is a generic statistical extractor, $prk$ is identically
+  distributed in Games \ref{gcs:ae} and \ref{gcs:sub}$.k$. This prevents the
+  adversary from distinguishing the two games via $auth$ or $K$. An adversary
+  with non-negligible advantage in distinguishing Games \ref{gcs:ae} and
+  $\ref{gcs:sub}.k$ must detect the difference in $ct_k$.  Hence the adversary's
+  advantage translates to an equivalent advantage for
+  $\Oracle{B_{\theGameNum.k}}$ in the IND-CPA challenge. This implies
+  \begin{equation} \label{eq:subadv}
+    \Prb{\ref{gcs:ae}} \le \Prb{\ref{gcs:sub}.k} + \IndCpa{KEM_k}{B_{\theGameNum.k}} \quad \forall k.
+  \end{equation}
+
+  \LGame{gcs:xtr} The challenger executes some variant of Game \ref{gcs:sub}
+  but replaces the pseudorandom key, $prk = \XTR(T, pms)$, in sessions $\p{i^*}{s^*}$ and $\p{j^*}{t^*}$ with a
+  uniform random value $\widetilde{prk} \in \{0,1\}^\mu$.
+
+  In each variant of Game \ref{gcs:sub} we ensure that the input to $\XTR$ has min-entropy of
+  at least $\mu$ bits. Assuming that $\XTR$ is a generic statistical randomness extractor, the value
+  of $prk$ is uniformly random in each variant of Game \ref{gcs:sub}. Hence
+  this game is indistinguishable from the chosen variant of Game \ref{gcs:sub}, and
+  we obtain
+  \begin{equation}
+    \Prb{\ref{gcs:sub}.k} = \Prb{\ref{gcs:xtr}}\quad \forall k.
+  \end{equation}
+
+  Consequently the $n_E$ inequalities of Equation \ref{eq:subadv} differ only
+  in the magnitude of the adversary's advantage in the respective KEM game.
+  This gives us
+  \begin{multline}
+    \Prb{\ref{gcs:ae}} \le \Prb{\ref{gcs:xtr}}+{}\\
+    \min\left\{\AdvDdh{B_{2.0}}, \min_{k}\left\{\IndCpa{KEM_k}{B_{2.k}}\right\}\right\}.
+  \end{multline}
+
+  \LGame{gcs:prf} The challenger proceeds as in Game \ref{gcs:xtr}. In sessions
+  $\p{i^*}{s^*}$ and $\p{j^*}{t^*}$ the challenger replaces $\PRF$ with a
+  random function $F$.  If $\Oracle{A}$ can distinguish Game \ref{gcs:prf} from
+  Game \ref{gcs:xtr}, then there exists an algorithm $\Oracle{B}_\theGameNum$,
+  that runs in essentially the same time, that breaks the pseudorandomness of
+  $\PRF$. Hence,
+  \begin{equation}\label{eq:gcs:xtr}
+    \Prb{\ref{gcs:xtr}} \le \Prb{\ref{gcs:prf}} + \AdvPrf{\PRF}{B_\theGameNum}.
+  \end{equation}
+
+  \LGame{gcs:aenc}
+    In this final game the challenger plays parallel roles as the
+    $\Experiment{s-acce-ae}$ challenger from Game \ref{gcs:prf} and as two
+    sLHAE challengers. It embeds the sLHAE games in the
+    $\Experiment{s-acce-ae}$ simply by setting the keys used by $\p{i^*}{s^*}$
+    and $\p{j^*}{t^*}$ appropriately.
+
+    The adversary's access to $\p{i^*}{s^*}.b$ and $\p{j^*}{t^*}.b$ is only
+    through the $\Encrypt$ and $\Decrypt$ queries that define the sLHAE game.
+    Hence the adversary outputs a $b^* = \p{i^*}{s^*}.b$ with advantage that
+    is, by definition, no better than its advantage in the sLHAE game.
+
+    In Game \ref{gcs:prf} the session key $K$ is uniformly random and
+    independent of the messages exchanged between $\p{i^*}{s^*}$ and
+    $\p{j^*}{t^*}$. As such, the adversary cannot detect the game transition.
+    Letting $\Algorithm{B_\theGameNum}$ denote the challenger in Game $\theGameNum$,
+    we have
+    \begin{equation}\label{eq:gcs:slhae}
+      1/2 \le \Prb{\ref{gcs:prf}} \le 1/2 + \AdvSlhae{B_\theGameNum}.
+    \end{equation}
+
+    Combining the above inequalities establishes the claim
+  \end{proof}
+
+  % \Game We replace the value $g^{xa}$ with a random element of $\mathbf G$.
+  % Suppose there exists an algorithm $\Acal$ that has non-negligible advantage
+  % in Game 3, but not in Game 4. Embed a DDH challenge in Game 2, switch to Game 3
+  % to simulate random case. This shows
+  % \[\Prb{3} \le \Prb{4} + \epsilon_{ddh}\]
+
+  %Hence, under the DDH assumption in $\mathbf G$, if $\Prb{3}$ is non-negligible,
+  %then so is $\Prb{4}$.
+
+  \vspace{-1.5em}
+\subsection{Proofs of main theorems}
+  \begin{proof}[Of Theorem \ref{thm:ntor}]
+    Modeling $\XTR$ as a random oracle ensures that it is a generic statistical
+    extractor \cite{Dodis2004,Krawczyk2010}, so we may apply the bounds on
+    $\SAcceSaHybrid{\cdot}$ and $\SAcceAeNtor{\cdot}$ from Lemmas
+    \ref{lem:accesa} and \ref{lem:acceae}.
+
+    Pre-quantum SACCE security only considers PPT pre-quantum adversaries
+    $\Oracle{A}$. Hence the ODH assumption implies that $\SAcceSaNtor{A}$ is
+    negligible and the DDH assumption implies that $\SAcceAeNtor{A}$ is
+    negligible. An application of Lemma \ref{lem:selective} establishes the
+    claim.
+  \end{proof}
+
+  \begin{proof}[Of Theorem \ref{thm:hybrid}]
+    Modeling $\XTR$ as a random oracle ensures that it is a generic statistical
+    extractor, so we may apply the bounds on $\SAcceSaHybridK{\cdot}$ and
+    $\SAcceAeHybridK{\cdot}$ from Lemmas \ref{lem:accesa} and \ref{lem:acceae}.
+
+    Since transitional SACCE security forbids post-quantum adversaries in the
+    pre-accept phase, the ODH assumption for $(\mathbf{G}, \Hash)$ and Lemma
+    \ref{lem:accesa} imply that $\SAcceSaNtor{A}$ is bounded from above by a
+    negligible quantity.
+
+    On the other hand, we must allow post-quantum adversaries, $\Oracle{Q}$, when applying Lemma \ref{lem:acceae}.
+    The DDH assumption does not hold against post-quantum adversaries, hence:
+    \begin{multline}
+      \min\left\{\AdvDdh{B_{2.0}^{\Oracle{Q}}}, \IndCpa{KEM_1}{B_{2.1}^{\Oracle{Q}}}\right\} ={}\\
+      \IndCpa{KEM_1}{B_{2.1}^{\Oracle{Q}}},\notag
+    \end{multline}
+    and the claim about transitional security follows.
+
+    The claim about pre-quantum security follows by re-evaluating the above
+    minimization over PPT pre-quantum adversaries.
+  \end{proof}
+
+
+\section{Implementation and performance characteristics} \label{sec:perf}
+
+  We have implemented our protocol with $\HKDFS$,  $\djbcurve$ and
+  ${\sf ntruees443ep1}$. We have integrated this implementation into Tor
+  0.2.6.2-alpha and made it publicly available \cite{ntrutorsource}.
+
+  It was argued in \cite{HoffsteinPSSWZ15} that ${\sf ntruees443ep1}$ is
+  IND-CCA2 secure against post-quantum adversaries at the $\lambda=128$ level.
+  This instantiation of hybrid is therefore estimated to provide transitional
+  security at the $\lambda = 128$ bit security level.
+
+  Preliminary benchmarks comparing our instantiation's performance with that of
+  \ntor~and that of the legacy Tor handshake ({\sf tap}) are presented in
+  Table~\ref{tab:comp}.  The benchmark was conducted on an Intel Core i7-2640M
+  CPU clocked at 2.80GHz with TurboBoost disabled. RSA and $\mathbb{Z}_p^*$
+  Diffie-Hellman operations for ${\sf tap}$ were provided by OpenSSL 1.0.1i.
+  The ECDH operations for \ntor~and \hybrid~were performed by the ${\sf
+  donna\_c64}$ implementation of $\djbcurve$ from
+  NaCL-20110221~\cite{nacl_code}.
+
+  The {\sf ntruees443ep1} operations were provided by {\sf libntruencrypt}
+  version 1.0.1 \cite{ntru_code}. We note that {\sf libntruencrypt} is a
+  reference implementation. It does not attempt to be constant time and does
+  not perform parameter set specific optimizations. Our {\sf libntruencrypt}
+  was compiled without vectorized convolutions. A previous version of this
+  paper reported numbers with vectorized convolutions, and other optimizations.
+  We have reported the unoptimized figures here as many Tor routers do not
+  support SSSE3 operations.
+
+  Note also that {\sf ntruees443ep1} is designed to meet the requirements of
+  a IND-CCA2 public key encryption scheme, but our setting only requires an IND-CPA
+  KEM. An IND-CPA variant of \ntrue~may be more efficient than {\sf ntruees443ep1}.
+
+  The data in Tables \ref{tab:comp} and \ref{tab:quartiles} was gathered using
+  Tor's internal benchmarking utility. Table \ref{tab:comp} reports times
+  averaged over $4096$ trials for ${\sf tap}$, \ntor, \hybrid, and the protocol
+  of Ghosh-Kate. Communication costs are also reported in table \ref{tab:comp}.
+  Table \ref{tab:quartiles} reports first, second, and third quartiles for the
+  \hybrid~protocol in a separate run of $4096$ trials.
+
+  \begin{table}[t]
+    \centering
+    \begin{tabular}{rrrr}
+      & \multicolumn{3}{c}{\hybrid}\\
+      & quartile & median & quartile\\\hline
+      Client init         & 657 $\mu$s & 661 $\mu$s & 666 $\mu$s\\
+      Server response     & 304 $\mu$s & 304 $\mu$s & 305 $\mu$s\\
+      Client finish       & 217 $\mu$s & 217 $\mu$s & 217 $\mu$s\\
+    \end{tabular}
+    \caption{Timing data for the \hybrid~protocol phases over 4096 samples.}
+    \label{tab:quartiles}
+  \end{table}
+
+	%On the other hand, 
+	%the increase in the timing result is insignificant, especially on the 
+	%server side, we see an increase of 15\%. Also notices that the 
+	%proposed protocol
+	%is more in favor of the server, where the server handles less than 40\%
+	%of total computation. 
+
+
+\section{Other security considerations} \label{sec:otherconcerns}
+
+    \noindent{\bf Multi-session attacks}\\
+    The quadratic dependence on the number of sessions in the reduction from
+    $\Experiment{sacce-ae}$ to $\Experiment{s-sacce-ae}$ in Lemma
+    \ref{lem:selective} suggests there might be a powerful multi-session attack
+    that our security proof misses. Indeed, Zaverucha's attack
+    \cite{Zaverucha2012} on extract-and-expand key derivation functions applies
+    to our use of $\KDF$.
+
+    Consider an adversary that attempts to find a collision in an enormous
+    collection of $auth$ tags. In \hybrid, a collision in $auth$ tags suggests
+    a collision in $prk$ and hence in $K$. The adversary can $\Reveal$ one
+    session of a colliding pair and hope to learn the session key of the second
+    (this fails if distinct $prk$ led to a collision in $auth$).  This attack
+    does not show up in our security proof as the selective security experiment
+    is effectively single-session.
+
+    In \ntor~the $auth$ tag is derived in a session-dependent manner that
+    prevents this collision attack. We choose a different countermeasure and
+    simply require $auth$ to be of length $\mu = 2\lambda$. This is sufficient
+    since the above collision attack on a random function of output length
+    $2\lambda$ has cost $2^\lambda$.  Taking $auth$ to be length $2\lambda$ is
+    already required in the (single-session) transitional and post-quantum
+    settings since quantum search provides a single-session preimage attack
+    that would reveal $prk$ for cost $\Theta(2^{\mu/2})$.\\
+
+    \noindent{\bf Forward secrecy}\\
+    Any protocol meeting our definition of channel security provides forward
+    secrecy. Our transitional SACCE protocols provide forward secrecy and
+    resist adversaries that obtain quantum capabilities after session
+    negotiation.\\
+
+    \noindent{\bf One-way anonymity}\\
+    The \ntor~paper formalizes a notion of one-way anonymity that
+    \ntor~satisfies. Their definition makes use of features of the AKE
+    execution environment that are not paralleled by our ACCE execution
+    environment, so we cannot apply their proof directly.
+
+    It is difficult to imagine a notion of one-way anonymity that would
+    distinguish between our \hybrid~protocol and \ntor~operated in isolation.
+    However, it is apparent that allowing multiple handshake types could have
+    an impact on anonymity. In particular, if clients run different versions of
+    the Tor software, then the set of ciphersuites they support may provide a
+    mechanism for deanonymizing them.
+
+    The one-way anonymity notion proposed in \cite{GoldbergSU13} ignores the
+    negotiation protocol and, therefore, cannot capture this subtlety. We leave
+    it to future work to propose a stronger definition of one-way anonymity.\\
+
+    \noindent{\bf Multi-ciphersuite security}\\
+    Bergsma, Dowling, Kohlar, Schwenk, and Stebila have shown that SSH is a
+    secure ACCE protocol in a \emph{multi-ciphersuite} setting that allows for
+    long-term key reuse between ciphersuites \cite{Bergsma2014}. A similar
+    analysis will be necessary for Tor if servers are allowed to reuse their
+    long-term keys between \hybrid~variants and \ntor.\\
+
+    \noindent{\bf Post-quantum security}\\
+    One could achieve post-quantum ACCE security by carefully incorporating a
+    post-quantum signature (e.g. XMSS \cite{Buchmann2011} or SPHINCS
+    \cite{Bernstein2015}), or a server-side static encryption key, into the
+    handshake. Post-quantum authentication would also be necessary for key
+    distribution. While ultimately necessary, integrating a new authentication
+    mechanism would require significant modifications to the Tor protocol.  We
+    feel that doing so would decrease the likelihood of our protocol being
+    deployed in a timely fashion.\\
+
+    \noindent{\bf Fully quantum ACCE environment}\\
+    Our ACCE execution environment explicitly forbids quantum communication
+    between the adversary and session oracles. We believe this is a natural
+    restriction; we are only interested in proving that the \hybrid~protocol
+    meets a reasonable definition of security when it is executed on a
+    classical computer.
+
+    The assumption that the adversary does not perform \emph{interactive}
+    quantum computations with the session oracles is implicit in all related
+    work. \\
+
+    % The vast majority of work in the ACCE model, e.g. \cite{Jager2012,
+    % Kohlar2013, Krawczyk2013, Bergsma2014},  has ignored post-quantum adversaries
+    % entirely.
+
+
+    % There are at least two ways to remove the restriction on quantum
+    % communication.
+
+    % First, we could allow quantum communication but specify, as part of the
+    % \hybrid~protocol, that parties measure their inputs in the computational
+    % basis. Suppose an adversary, $\Oracle{A}$, violates the security assumption
+    % when parties measure their inputs, then there exists an adversary,
+    % $\Oracle{B}$, that violates the security assumption using only classical
+    % communication. The adversary $\Oracle{B}$ simulates the challenger for
+    % $\Oracle{A}$, measures the content of all $\Send$ queries, and issues
+    % $\Send$ queries containing the (classical) measurement results to the real
+    % challenger. Hence, forbidding quantum communication has no effect
+    % when honest parties execute the protocol on classical computers.
+
+    % Alternatively, we could adopt a fully quantum setting. We could allow
+    % quantum communication with the session oracles, and require the session oracles
+    % to execute the entire protocol as a quantum computation. Boneh and Zhandry
+    % have considered the security of signatures and chosen-ciphertext secure
+    % encryption in such a model \cite{Boneh2013}, and they note that it is
+    % stronger than what is necessary for post-quantum security.
+
+    %   We will not attempt such a proof as this model is
+    % clearly too strong for our protocol. It requires that the session oracles
+    % are capable of performing quantum computations that are essentially as
+    % expensive as those required to violate server authentication (e.g. elliptic
+    % curve scalar multiplication). Our protocols cannot be secure in such a
+    % model without making unreasonable restrictions on the adversary.
+
+    %{\bf Protection against downgrade attacks}\\
+    %  \TODO{XXX Need to look at negotiation protocol!}
+
+    \noindent{\bf Initial hash of static-ephemeral DH share}\\
+      Our proof requires that the parties compute $s_0 = \Hash(g^{xa})$, rather
+      than just $g^{xa}$, so that we can make use of the Oracle Diffie-Hellman
+      assumption. The concatenation of the pre-master secret shares prevents us
+      from applying an ODH-like assumption directly to the extractor.
+
+      The ODH assumption is needed to ensure that the party in the responder
+      role can respond consistently to multiple queries with the same $X$ in
+      Game \ref{gsa:dh} of Lemma \ref{lem:accesa}. It is quite possible that
+      computing $s_0$ as $g^{xa}$ would have no practical security
+      impact, yet we cannot prove this without additional assumptions.\\
+
+    \noindent{\bf Use of a statistical extractor}\\
+      We have simplified our security proof by requiring statistical extractors
+      in Lemmas \ref{lem:accesa} and \ref{lem:acceae}. A concrete instantiation
+      of $\XTR$ is unlikely to meet this stringent requirement. However, the
+      requirement is easily met when $\XTR$ is modeled as a random oracle. A random
+      oracle is a statistical extractor provided that the inputs to it are conditionally
+      independent of its outputs. This is trivially true even in the quantum-accessible
+      random oracle model of \cite{Boneh2011}, hence no additional work is needed to
+      treat quantum-accessible random oracles.
+
+      A more satisfying proof would replace Lemmas \ref{lem:accesa} and
+      \ref{lem:acceae} with variants that rely only on computational extractors
+      such as those found in \cite{Krawczyk2010}. Many constructions of
+      computational extractors still require a hash function modeled as a
+      random oracle. The construction of a computational extractor in the
+      quantum-accessible random oracle model has, to the best of our knowledge,
+      not been given in the literature.\\
+
+    \noindent{\bf Stateful length-hiding authenticated encryption}\\
+      Keys negotiated by the circuit extension handshake protocol are used in
+      Tor's relay protocol. The relay protocol exchanges data in $509$ byte
+      segments called \emph{relay cells}.  Each relay cell contains metadata (5 bytes),
+      a truncated MAC (4 bytes), the length of the payload (2 bytes), the payload ($\ell$ bytes),
+      and null padding ($509 - 11 - \ell$ bytes).
+
+      Tor currently uses $\AlgorithmName{AES-128}$ in counter mode to encrypt
+      relay cells. The MAC is computed over end-to-end communications as a
+      running $\AlgorithmName{SHA1}$ digest. Only the clent and the used
+      exit-node check the MAC; relay cells that are forwarded are not
+      authenticated.
+
+      With only a $32$ bit MAC, this scheme cannot provide cryptographic
+      authenticity guarantees. There are unique challenges in migrating to
+      proper authenticated encryption. For example, encrypt-then-mac schemes
+      cannot be used as the message expansion from concatenated MACs would leak
+      the circuit length.
+
+      There are several proposals currently under consideration within the Tor
+      community that would improve the situation
+      \cite{TorPropRelay,TorPropAez}.  Future work should consider
+      whether any of these proposals meet our requirement of stateful
+      length-hiding authenticated encryption, or whether there is another
+      notion that is more appropriate for Tor.
+
+      It will also be necessary to migrate to a cipher with $256$ bit keys for
+      $128$ bit transitional or post-quantum security.
+
+\vspace{-2em}
+\section{Conclusion}
+
+  We have presented a transitionally secure SACCE protocol and provided an
+  implementation in a form that could be integrated into Tor easily.
+  To assist with this integration, and to guide experimentation with other
+  instantiations, we have published an engineering specification of
+  \hybrid~as Tor proposal $\#263$ \cite{TorPropHybrid}.
+
+  There are several barriers to deployment that remain.
+
+  First, Tor circuit extension handshakes are limited to $505$ bytes due to the
+  current specification of the CREATE cell. Our instantiation using ${\sf
+  ntruees443ep1}$ requires $693$ bytes for the client to server message and
+  $673$ bytes for the server to client message.  A discussion with Nick
+  Mathewson about the size limit on CREATE cells has resulted in Tor proposal
+  $\#249$ \cite{TorPropCell}, which would remedy this problem.
+
+  Second, the ${\sf ntruees443ep1}$ parameter set is covered by U.S. Patent
+  Nos.\ $6081597$ and $7031468$ \cite{PatentNTRU,PatentProduct}. While the
+  patents are free to use within open source software, and ${\sf
+  libntruencrypt}$ is distributed under the GPL, some users and software
+  distributors may wish to avoid patented cryptography entirely\footnote{U.S. Patent
+  No. $6081597$ covers the core NTRU functionality and expires on August 19, 2017. U.S. Patent
+  No. $7031468$ covers the product-form efficiency enhancement and expires on August 24, 2021.}.
+
+  Third, it remains to be seen whether our instantiation provides acceptable
+  performance. The figures of Table \ref{tab:comp} indicate that our
+  instantiation is as computationally expensive as the original ${\sf tap}$
+  handshake and is much less compact. It is, however, more compact than the
+  proposal from Ghosh and Kate.
+
+  Directions for future work include: performance analyses for \hybrid~when
+  instantiated with different post-quantum KEMs (or with a faster and/or constant-time
+  implementation of \ntrue); a study of one-way anonymity
+  that addresses the points raised in Section \ref{sec:otherconcerns}; a proof
+  of security for \hybrid~that does not depend on statistical extractors;
+  and the development of post-quantum ACCE protocols.
+
+
+\paragraph*{Acknowledgements}
+We are very grateful to Nick Mathewson and other members of the Tor community
+for their input on Tor proposal \#263. We also wish to thank: Aniket Kate for
+discussing potential improvements to our scheme, Douglas Stebila for several
+enlightening conversations, and the anonymous reviewers for their close readings
+and detailed recommendations.
+
+
+\bibliographystyle{plain}
+%{ \bibliography{hybrid}{} }
+\begin{thebibliography}{10}
+
+\bibitem{Abdalla2001}
+Michel Abdalla, Mihir Bellare, and Phillip Rogaway.
+\newblock The oracle {Diffie}-{Hellman} assumptions and an analysis of {DHIES}.
+\newblock In David Naccache, editor, {\em Topics in {Cryptology} --- {CT}-{RSA}
+  2001: The Cryptographers' Track at RSA Conference 2001 San Francisco, CA,
+  USA, April 8--12, 2001 Proceedings}, volume 2020 of {\em Lecture {Notes} in
+  {Computer} {Science}}, pages 143--158. Springer, 2001.
+
+\bibitem{Bergsma2014}
+Florian Bergsma, Benjamin Dowling, Florian Kohlar, J{\"o}rg Schwenk, and
+  Douglas Stebila.
+\newblock Multi-ciphersuite security of the secure shell ({SSH}) protocol.
+\newblock In {\em Proceedings of the 2014 {ACM} {SIGSAC} {Conference} on
+  {Computer} and {Communications} {Security}}, {CCS} '14, pages 369--381, New
+  York, NY, USA, 2014. ACM.
+
+\bibitem{Bernstein2015}
+Daniel~J. Bernstein, Daira Hopwood, Andreas H\"ulsing, Tanja Lange, Ruben
+  Niederhagen, Louiza Papachristodoulou, Michael Schneider, Peter Schwabe, and
+  Zooko Wilcox-O'Hearn.
+\newblock {SPHINCS}: {Practical} stateless hash-based signatures.
+\newblock In Elisabeth Oswald and Marc Fischlin, editors, {\em Advances in
+  {Cryptology} -- {EUROCRYPT} 2015: 34th Annual International Conference on the
+  Theory and Applications of Cryptographic Techniques, Sofia, Bulgaria, April
+  26-30, 2015, Proceedings, Part I}, volume 9056 of {\em Lecture {Notes} in
+  {Computer} {Science}}, pages 368--397. Springer, 2015.
+
+\bibitem{nacl_code}
+Daniel~J. Bernstein, Tanja Lange, and Peter Schwabe.
+\newblock {NaCL}: Networking and cryptography library.
+\newblock \url{http://nacl.cr.yp.to/}, 2011.
+
+\bibitem{Boneh2011}
+Dan Boneh, {\"O}zg{\"u}r Dagdelen, Marc Fischlin, Anja Lehmann, Christian
+  Schaffner, and Mark Zhandry.
+\newblock Random oracles in a quantum world.
+\newblock In Dong~Hoon Lee and Xiaoyun Wang, editors, {\em Advances in
+  {Cryptology} -- {ASIACRYPT} 2011: 17th International Conference on the Theory
+  and Application of Cryptology and Information Security, Seoul, South Korea,
+  December 4-8, 2011. Proceedings}, volume 7073 of {\em Lecture {Notes} in
+  {Computer} {Science}}, pages 41--69. Springer, 2011.
+
+\bibitem{Boneh1995}
+Dan Boneh and Richard~J. Lipton.
+\newblock Quantum cryptanalysis of hidden linear functions.
+\newblock In Don Coppersmith, editor, {\em Advances in {Cryptology} 1981 --
+  1997: Electronic Proceedings and Index of the CRYPTO and EUROCRYPT
+  Conferences 1981 -- 1997}, volume 1440 of {\em Lecture {Notes} in {Computer}
+  {Science}}, chapter {CRYPTO} '95, pages 424--437. Springer, 2001.
+
+\bibitem{Bos2015}
+Joppe~W. Bos, Craig Costello, Michael Naehrig, and Douglas Stebila.
+\newblock Post-quantum key exchange for the {TLS} protocol from the ring
+  learning with errors problem.
+\newblock In {\em 2015 {IEEE} Symposium on Security and Privacy, {SP} 2015, San
+  Jose, CA, USA, May 17-21, 2015}, pages 553--570, 2015.
+
+\bibitem{Buchmann2011}
+Johannes Buchmann, Erik Dahmen, and Andreas H\"ulsing.
+\newblock {XMSS} -- {A} practical forward secure signature scheme based on
+  minimal security assumptions.
+\newblock In Bo-Yin Yang, editor, {\em Post-{Quantum} {Cryptography}: 4th
+  International Workshop, PQCrypto 2011, Taipei, Taiwan, November 29 --
+  December 2, 2011. Proceedings}, volume 7071 of {\em Lecture {Notes} in
+  {Computer} {Science}}, pages 117--129. Springer, 2011.
+
+\bibitem{Chen2016}
+Lily Chen, Stephen Jordan, Yi-Kai Liu, Dustin Moody, Rene Peralta, Ray Perlner,
+  and Daniel Smith-Tone.
+\newblock Report on post-quantum cryptography.
+\newblock NIST Internal Report 8105.
+  \url{http://dx.doi.org/10.6028/NIST.IR.8105}, February 2016.
+
+\bibitem{NSA}
+NSA Information~Assurance Directorate.
+\newblock Commercial national security algorithm suite.
+\newblock
+  \url{https://www.iad.gov/iad/programs/iad-initiatives/cnsa-suite.cfm}, August
+  2015.
+
+\bibitem{Dodis2004}
+Yevgeniy Dodis, Rosario Gennaro, Johan H{\aa}stad, Hugo Krawczyk, and Tal
+  Rabin.
+\newblock Randomness extraction and key derivation using the {CBC}, cascade and
+  {HMAC} modes.
+\newblock In Matt Franklin, editor, {\em Advances in {Cryptology} - {CRYPTO}
+  2004}, volume 3152 of {\em Lecture {Notes} in {Computer} {Science}}, pages
+  494--510. Springer, 2004.
+
+\bibitem{GhoshK15}
+Satrajit Ghosh and Aniket Kate.
+\newblock Post-quantum forward-secure onion routing.
+\newblock In Tal Malkin, Vladimir Kolesnikov, Bishop~Allison Lewko, and
+  Michalis Polychronakis, editors, {\em Applied Cryptography and Network
+  Security: 13th International Conference, ACNS 2015, New York, NY, USA, June
+  2-5, 2015, Revised Selected Papers}, volume 9092 of {\em Lecture {Notes} in
+  {Computer} {Science}}, pages 263--286. Springer, 2015.
+
+\bibitem{GoldbergSU13}
+Ian Goldberg, Douglas Stebila, and Berkant Ustaoglu.
+\newblock Anonymity and one-way authentication in key exchange protocols.
+\newblock {\em Designs, Codes and Cryptography}, 67(2):245--269, 2013.
+
+\bibitem{HoffsteinPSSWZ15}
+Jeff Hoffstein, Jill Pipher, John~M. Schanck, Joseph~H. Silverman, William
+  Whyte, and Zhenfei Zhang.
+\newblock Choosing parameters for {NTRUEncrypt}.
+\newblock Cryptology ePrint Archive, Report 2015/708, 2015.
+\newblock \url{http://eprint.iacr.org/2015/708}.
+
+\bibitem{PatentNTRU}
+Jeffrey Hoffstein, Jill Pipher, and Joseph~H. Silverman.
+\newblock United {States} {Patent}: 6081597 - {Public} key cryptosystem method
+  and apparatus.
+\newblock \url{https://www.google.com/patents/US6081597}, June 2000.
+
+\bibitem{PatentProduct}
+Jeffrey Hoffstein and Joseph~H. Silverman.
+\newblock United {States} {Patent}: 7031468 - {Speed} enhanced cryptographic
+  method and apparatus.
+\newblock \url{https://www.google.com/patents/US7031468}, April 2006.
+
+\bibitem{ntru_code}
+Security Innovation.
+\newblock libntruencrypt: {NTRUEncrypt} reference implementation.
+\newblock \url{https://github.com/NTRUOpenSourceProject/ntru-crypto}, 2015.
+\newblock Version 1.0.1.
+
+\bibitem{Jager2012}
+Tibor Jager, Florian Kohlar, Sven Sch{\"a}ge, and J{\"o}rg Schwenk.
+\newblock On the security of {TLS}-{DHE} in the standard model.
+\newblock In Reihaneh Safavi-Naini and Ran Canetti, editors, {\em Advances in
+  {Cryptology} - {CRYPTO} 2012}, volume 7417 of {\em Lecture {Notes} in
+  {Computer} {Science}}, pages 273--293. Springer, 2012.
+
+\bibitem{Kohlar2013}
+Florian Kohlar, Sven Sch{\"a}ge, and J{\"o}rg Schwenk.
+\newblock On the security of {TLS}-{DH} and {TLS}-{RSA} in the standard model.
+\newblock Cryptology ePrint Archive, Report 2013/367, 2013.
+\newblock \url{http://eprint.iacr.org/2013/367}.
+
+\bibitem{Krawczyk2010}
+Hugo Krawczyk.
+\newblock Cryptographic extraction and key derivation: The {HKDF} scheme.
+\newblock In Tal Rabin, editor, {\em Advances in {Cryptology} -- {CRYPTO} 2010:
+  30th Annual Cryptology Conference, Santa Barbara, CA, USA, August 15-19,
+  2010. Proceedings}, volume 6223 of {\em Lecture {Notes} in {Computer}
+  {Science}}, pages 631--648. Springer, 2010.
+
+\bibitem{Krawczyk2013}
+Hugo Krawczyk, Kenneth~G. Paterson, and Hoeteck Wee.
+\newblock On the security of the {TLS} protocol: {A} systematic analysis.
+\newblock In Ran Canetti and Juan~A. Garay, editors, {\em Advances in
+  Cryptology -- {CRYPTO} 2013: 33rd Annual Cryptology Conference, Santa
+  Barbara, CA, USA, August 18-22, 2013. Proceedings, Part I}, volume 8042 of
+  {\em Lecture {Notes} in {Computer} {Science}}, pages 429--448. Springer,
+  2013.
+
+\bibitem{TorPropRelay}
+Nick Mathewson.
+\newblock {Tor} proposal \# 202: Two improved relay encryption protocols for
+  {Tor} cells.
+\newblock In \cite{TorSpec}, path:
+  root/proposals/202-improved-relay-crypto.txt, blob: 695df306.
+
+\bibitem{TorPropNtor}
+Nick Mathewson.
+\newblock {Tor} proposal \#216: Improved circuit-creation key exchange.
+\newblock In \cite{TorSpec}, path: root/proposals/216-ntor-handshake.txt, blob:
+  f76e81cd.
+
+\bibitem{TorPropCell}
+Nick Mathewson.
+\newblock {Tor} proposal \#249: Allow create cells with >505 bytes of handshake
+  data.
+\newblock In \cite{TorSpec}, path: root/proposals/249-large-create-cells.txt,
+  blob: e04b4c0c.
+
+\bibitem{TorPropAez}
+Nick Mathewson.
+\newblock {Tor} proposal \#261: {AEZ} for relay cryptography.
+\newblock In \cite{TorSpec}, path: root/proposals/261-aez-crypto.txt, blob:
+  14435e7c.
+
+\bibitem{TorSpec}
+The~{Tor} Project.
+\newblock Torspec {Git} repository.
+\newblock \url{https://gitweb.torproject.org/torspec.git}.
+
+\bibitem{TorPropHybrid}
+John~M. Schanck, William Whyte, and Zhenfei Zhang.
+\newblock {Tor} proposal \#263: Request to change key exchange protocol for
+  handshake.
+\newblock In \cite{TorSpec}, path:
+  root/proposals/263-ntru-for-pq-handshake.txt, blob: a6732b60.
+
+\bibitem{ntrutorsource}
+John~M. Schanck, William Whyte, and Zhenfei Zhang.
+\newblock Implementation of the current proposal using {NTRUEncrypt}.
+\newblock \url{https://github.com/NTRUOpenSourceProject/ntru-tor}, July 2015.
+
+\bibitem{Shor94}
+Peter~W. Shor.
+\newblock Algorithms for quantum computation: Discrete logarithms and
+  factoring.
+\newblock In {\em Foundations of Computer Science, 1994 Proceedings., 35th
+  Annual Symposium on}, pages 124--134. IEEE Computer Society Press, 1994.
+
+\bibitem{Zaverucha2012}
+G.M. Zaverucha.
+\newblock Hybrid encryption in the multi-user setting.
+\newblock Cryptology ePrint Archive, Report 2012/159, 2012.
+\newblock \url{http://eprint.iacr.org/2012/159}.
+
+\end{thebibliography}
+
+
+\end{document}
